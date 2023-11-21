@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunktaba_front=self.webpackChunktaba_front||[]).push([[652],{652:(a,e,s)=>{s.d(e,{worker:()=>o});var t=s(42),n=s(8),r=s(152);const k=[n.d.get("/api/users",(()=>r.Z.json([{id:1,name:"Ham"}])))],o=(0,t.L)(...k)}}]);
+//# sourceMappingURL=652.d4213228.chunk.js.map
