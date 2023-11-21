@@ -44,7 +44,6 @@ public class SecurityService {
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(CEmailLoginFailedException::new);
 
-
         System.out.println("SecurityService-login: 계정을 찾았습니다. " + account);
         // 토큰 발행
         TokenDto tokenDto = jwtProvider.generateTokenDto(email);

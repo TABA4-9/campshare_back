@@ -5,6 +5,7 @@ import javax.persistence.*;
 @javax.persistence.Entity
 @Table(name="tibero_test")  //table명
 public class Entity {
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     @Column(name="id", nullable = false)
     private int id;

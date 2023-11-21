@@ -148,6 +148,9 @@ public class AuthService {
 
         catch (CEmailLoginFailedException e) {
             loginResponseDto.setLoginSuccess(false);
+            System.out.println("계정 정보 못 찾음");
+            accountRepository.save(account);
+            System.out.println("DB에 계정 저장");
             return ResponseEntity.ok(loginResponseDto);
         }
 

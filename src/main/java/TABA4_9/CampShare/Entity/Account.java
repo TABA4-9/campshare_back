@@ -19,7 +19,7 @@ import javax.persistence.Entity;
 @Table(name = "account")
 @Entity
 public class Account extends BaseTimeEntity { // 예약어가 이미 존재하므로 users로 바꾸어 지정해야함
-
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     @Column(name="account_id")
     private Long id;
