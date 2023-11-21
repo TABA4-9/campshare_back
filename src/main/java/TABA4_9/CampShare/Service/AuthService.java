@@ -15,16 +15,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 
-/*
-카카오 로그인 로직을 처리합니다.
-
- * login
- * signup
- * reissue
- * getKakaoAccessToken
- * getKakaoInfo
-
- */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -46,7 +36,7 @@ public class AuthService {
     /* 인가코드로 kakaoAccessToken 따오는 메소드 */
     public KakaoTokenDto getKakaoAccessToken(String code) {
 
-        RestTemplate rt = new RestTemplate(); //통신용
+        RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
@@ -198,27 +188,4 @@ public class AuthService {
         System.out.println("토큰 저장이 완료되었습니다 : 계정 아이디 - " + account.getId() + ", refresh token - " + tokenDto.getRefreshToken());
     }
 
-//    /* 회원가입 */
-//    public Long kakaoSignUp(SignupRequestDto requestDto) {
-//
-//        KakaoAccountDto kakaoAccountDto = getKakaoInfo(requestDto.getKakaoAccessToken());
-//        Account account = mapKakaoInfo(kakaoAccountDto);
-//
-//        // 닉네임, 프로필사진 set
-//        String nickname = requestDto.getAccountName();
-//        String accountPicture = requestDto.getPicture();
-//        account.setNickname(nickname);
-//        account.setPicture(accountPicture);
-//
-//        // save
-//        accountRepository.save(account);
-//
-//        // 회원가입 결과로 회원가입한 accountId 리턴
-//        return account.getId();
-//    }
-//
-//    public Account accountFindById(Long id) {
-//        return accountRepository.findById(id)
-//                .orElseThrow(CUserNotFoundException::new);
-//    }
 }

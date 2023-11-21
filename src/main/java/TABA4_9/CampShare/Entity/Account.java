@@ -22,7 +22,6 @@ public class Account extends BaseTimeEntity { // 예약어가 이미 존재하�
 
     @Id
     @Column(name="account_id")
-    @GeneratedValue(strategy = GenerationType.AUTO) // db의 id 값이 자동으로 생성되도록 한 경우 꼭 붙여줘야 하는 어노테이션
     private Long id;
 
     @Column

@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 @org.springframework.stereotype.Controller
 public class Controller implements ErrorController{
-    @Autowired
+
     private Service service;
 
     @GetMapping({"/", "/error"})

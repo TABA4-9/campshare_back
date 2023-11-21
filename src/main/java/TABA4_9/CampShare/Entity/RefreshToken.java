@@ -16,9 +16,6 @@ import javax.persistence.Table;
 @Table(name = "refresh_token")
 @Entity
 public class RefreshToken {
-
-    // DB 인덱스용으로 저장
-    // refresh token 으로 유저를 특정할 수 없도록 PK 지정
     @Id
     @Column(name = "token_key", nullable = false)
     private Long key;
