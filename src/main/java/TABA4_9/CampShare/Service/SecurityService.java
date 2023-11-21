@@ -40,8 +40,11 @@ public class SecurityService {
 
     /* 로그인 된 사용자에게 토큰 발급 : refresh token 은 DB 에 저장 */
     public TokenDto login(String email) {
+        /* 에러 발생 */
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(CEmailLoginFailedException::new);
+
+
         System.out.println("SecurityService-login: 계정을 찾았습니다. " + account);
         // 토큰 발행
         TokenDto tokenDto = jwtProvider.generateTokenDto(email);
@@ -56,13 +59,6 @@ public class SecurityService {
         return tokenDto;
     }
 
-    /*
-    회원가입 요청에 대해 Access Token 과 Refresh Token 을 발급하고,
-    Refresh Token 을 Token Repository 에 저장합니다.
-
-    try: account 가 저장되지 않은 상태에서 id 호출 불가능
-    -> refreshToken save 를 auth 단으로 올릴 것인가?
-     */
     public TokenDto signup(SignupRequestDto requestDto) {
         Account account = requestDto.getAccount();
         return jwtProvider.generateTokenDto(account.getEmail());

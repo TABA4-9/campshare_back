@@ -109,6 +109,8 @@ public class AuthService {
         // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
         String email = kakaoAccountDto.getKakao_account().getEmail();
         String kakaoName = kakaoAccountDto.getKakao_account().getProfile().getNickname();
+        System.out.println("email: "+ email);
+        System.out.println("kakaoName: "+ kakaoName);
 
         return Account.builder()
                 .loginType("KAKAO")
@@ -122,18 +124,33 @@ public class AuthService {
     public ResponseEntity<LoginResponseDto> kakaoLogin(String kakaoAccessToken) {
         // kakaoAccessToken 으로 회원정보 받아오기
         Account account = getKakaoInfo(kakaoAccessToken);
+        System.out.println("account(email): "+ account.getEmail());
         LoginResponseDto loginResponseDto = new LoginResponseDto();
+
         loginResponseDto.setKakaoAccessToken(kakaoAccessToken);
         loginResponseDto.setAccount(account);
+
+        System.out.println("loginResponseDto: "+loginResponseDto);
+
+
         try {
+            /* 에러 구간 시작 */
             TokenDto tokenDto = securityService.login(account.getEmail());
+            /* 에러 구간 끝 */
+
+            System.out.println("tokenDto: "+tokenDto);
             loginResponseDto.setLoginSuccess(true);
+
             HttpHeaders headers = setTokenHeaders(tokenDto);
+            System.out.println("return할 값: "+ResponseEntity.ok().headers(headers).body(loginResponseDto));
             return ResponseEntity.ok().headers(headers).body(loginResponseDto);
-        } catch (CEmailLoginFailedException e) {
+        }
+
+        catch (CEmailLoginFailedException e) {
             loginResponseDto.setLoginSuccess(false);
             return ResponseEntity.ok(loginResponseDto);
         }
+
     }
 
     /* 토큰을 헤더에 배치 */
