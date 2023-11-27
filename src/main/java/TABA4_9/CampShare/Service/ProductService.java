@@ -9,14 +9,14 @@ import org.springframework.stereotype.Service;
 public class ProductService {
     @Autowired
     ProductRepository productRepository;
-    public Product write(Product product){
+    public Product save(Product product){
         return productRepository.save(product);
     }
-    public Product find(int id){
+    public Product findById(Long id){
         return productRepository.findById(id);
     }
 
-    public void remove(Product product){
+    public void delete(Product product){
         productRepository.delete(product);
     }
 

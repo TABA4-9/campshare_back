@@ -1,8 +1,11 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Entity.Product;
+import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Entity.UploadResultDto;
+import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,12 +25,15 @@ import java.util.*;
 public class ProductController {
     @Autowired
     private ProductService productService;
+    @Autowired
+    private ProductImageService productImageService;
     @GetMapping("/product/data/main")
     public Product[] getThreeProduct(){
         Product[] product = new Product[3];
-        product[0]=productService.find(1);
-        product[1]=productService.find(2);
-        product[2]=productService.find(3);
+
+        product[0]=productService.findById(1L);
+        product[1]=productService.findById(2L);
+        product[2]=productService.findById(3L);
         return product;
     }
 
@@ -36,11 +42,12 @@ public class ProductController {
 
     @PostMapping("/upload")
     public ResponseEntity<List<UploadResultDto>> uploadFile(@RequestPart MultipartFile[] uploadFiles){
-
+        int length = uploadFiles.length;
+        ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
         System.out.println("Upload Files : " + uploadFiles);
 
-        for (int i=0; i<uploadFiles.length; i++) {
+        for (int i=0; i<length; i++) {
             System.out.println("for문 진입");
             // 이미지 파일만 업로드 가능
             if(!Objects.requireNonNull(uploadFiles[i].getContentType()).startsWith("image")){
@@ -69,14 +76,24 @@ public class ProductController {
             Path savePath = Paths.get(saveName);
             System.out.println("Save Path : " + savePath);
 
+            productImage.setUuid(uuid);
+            productImage.setImagePath(String.valueOf(savePath));
+            System.out.println("ProductImage : " + productImage);
             try {
+                System.out.println("Tibero 저장 시도");
+                productImageService.save(productImage);
+                System.out.println("Tibero 저장 성공");
+
                 uploadFiles[i].transferTo(savePath);// 실제 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
                 System.out.println("ResultDtoList (in try): " + resultDtoList);
-            }catch (IOException e){
+
+            }
+            catch (IOException e){
                 e.printStackTrace();
             }
         }//endFor
+
         System.out.println("ResultDtoList (before return): " + resultDtoList);
         return new ResponseEntity<>(resultDtoList, HttpStatus.OK);
     }//endMethod
