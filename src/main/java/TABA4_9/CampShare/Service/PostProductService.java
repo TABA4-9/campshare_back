@@ -31,4 +31,11 @@ public class PostProductService {
     }
 
 
+    public static String minPrice(PostProduct postProduct){
+        // /post/nextpage 에서 받은 데이터로 최저가 찾아서 String으로 return
+        return "서비스 준비중.";
+    }
+
+
+
 }

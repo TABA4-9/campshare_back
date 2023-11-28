@@ -4,7 +4,8 @@ import TABA4_9.CampShare.Entity.PostProduct;
 import TABA4_9.CampShare.Service.PostProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
+
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,8 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 
 /**
  * name String 상품 이름
@@ -47,9 +49,10 @@ public class PostProductController {
      *                     Responses200: OK
      */
 
+    @ExceptionHandler
     @PostMapping("/post/nextPage")
-    public String postProduct1(@RequestBody PostProduct product) throws IOException {
-        return minPrice(product);
+    protected String postProduct1(@RequestBody PostProduct product, Exception e){
+        return PostProductService.minPrice(product);
     }
 
 
@@ -78,14 +81,7 @@ public class PostProductController {
         return postProductFinal;
     }
 
-    public String minPrice(PostProduct postProduct){
-        // /post/nextpage 에서 받은 데이터로 최저가 찾아서 String으로 return
-        return "서비스 준비중.";
-    }
-
     public String setTimeStamp() {
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return simpleDateFormat.format(timestamp);
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }
