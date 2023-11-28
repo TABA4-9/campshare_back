@@ -1,8 +1,11 @@
 package TABA4_9.CampShare.Entity;
 
-import lombok.Data;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class KakaoTokenDto {
 
     private String access_token;

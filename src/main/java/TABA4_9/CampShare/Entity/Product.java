@@ -1,14 +1,14 @@
 package TABA4_9.CampShare.Entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import javax.persistence.Entity;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id

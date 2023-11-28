@@ -12,7 +12,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -31,7 +30,7 @@ public class AuthService {
     String KAKAO_REDIRECT_URI;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
-    String CLIIENT_SECRET;
+    String CLIENT_SECRET;
 
     /* 인가코드로 kakaoAccessToken 따오는 메소드 */
     public KakaoTokenDto getKakaoAccessToken(String code) {
@@ -46,7 +45,7 @@ public class AuthService {
         params.add("client_id", KAKAO_CLIENT_ID); //카카오 앱 REST API 키
         params.add("redirect_uri", KAKAO_REDIRECT_URI);
         params.add("code", code); //인가 코드 요청시 받은 인가 코드값, 프론트에서 받아오는 그 코드
-        params.add("client_secret", CLIIENT_SECRET);
+        params.add("client_secret", CLIENT_SECRET);
 
         // 헤더와 바디 합치기 위해 HttpEntity 객체 생성
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest = new HttpEntity<>(params, headers);
@@ -55,28 +54,35 @@ public class AuthService {
         System.out.println(kakaoTokenRequest);
 
         // 카카오로부터 Access token 수신
-        ResponseEntity<String> accessTokenResponse = rt.exchange(
-                "https://kauth.kakao.com/oauth/token",
-                HttpMethod.POST,
-                kakaoTokenRequest,
-                String.class
-        );
+        try{
+            ResponseEntity<String> accessTokenResponse = rt.exchange(
+                    "https://kauth.kakao.com/oauth/token",
+                    HttpMethod.POST,
+                    kakaoTokenRequest,
+                    String.class
+            );
 
-        System.out.println("카카오 서버로 code를 POST 전송 완료");
-        System.out.println("[카카오 서버로부터 받아온 토큰]");
-        System.out.println(accessTokenResponse);
+            System.out.println("카카오 서버로 code를 POST 전송 완료");
+            System.out.println("[카카오 서버로부터 받아온 토큰]");
+            System.out.println(accessTokenResponse);
 
-        // JSON Parsing (-> KakaoTokenDto)
-        ObjectMapper objectMapper = new ObjectMapper();
-        KakaoTokenDto kakaoTokenDto = null;
-        try {
-            kakaoTokenDto = objectMapper.readValue(accessTokenResponse.getBody(), KakaoTokenDto.class);
-        } catch (JsonProcessingException e) {
+            // JSON Parsing (-> KakaoTokenDto)
+            ObjectMapper objectMapper = new ObjectMapper();
+            KakaoTokenDto kakaoTokenDto = null;
+            try {
+                kakaoTokenDto = objectMapper.readValue(accessTokenResponse.getBody(), KakaoTokenDto.class);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            System.out.println("[object mapping 이후]");
+            System.out.println(kakaoTokenDto);
+            return kakaoTokenDto;
+        }
+        catch(Exception e){
             e.printStackTrace();
         }
-        System.out.println("[object mapping 이후]");
-        System.out.println(kakaoTokenDto);
-        return kakaoTokenDto;
+
+        return null;
     }
 
     /* kakaoAccessToken 으로 카카오 서버에 정보 요청 */
@@ -91,33 +97,47 @@ public class AuthService {
         HttpEntity<MultiValueMap<String, String>> accountInfoRequest = new HttpEntity<>(headers);
 
         // POST 방식으로 API 서버에 요청 보내고, response 받아옴
-        ResponseEntity<String> accountInfoResponse = rt.exchange(
-                "https://kapi.kakao.com/v2/user/me",
-                HttpMethod.POST,
-                accountInfoRequest,
-                String.class
-        );
+        try{
 
-        System.out.println("카카오 서버에서 정상적으로 데이터를 수신했습니다.");
-        // JSON Parsing (-> kakaoAccountDto)
-        ObjectMapper objectMapper = new ObjectMapper();
-        KakaoAccountDto kakaoAccountDto = null;
-        try {
-            kakaoAccountDto = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountDto.class);
-        } catch (JsonProcessingException e) { e.printStackTrace(); }
+            ResponseEntity<String> accountInfoResponse = rt.exchange(
+                    "https://kapi.kakao.com/v2/user/me",
+                    HttpMethod.POST,
+                    accountInfoRequest,
+                    String.class
+            );
 
-        // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
-        String email = kakaoAccountDto.getKakao_account().getEmail();
-        String kakaoName = kakaoAccountDto.getKakao_account().getProfile().getNickname();
-        System.out.println("email: "+ email);
-        System.out.println("kakaoName: "+ kakaoName);
+            System.out.println("카카오 서버에서 정상적으로 데이터를 수신했습니다.");
 
-        return Account.builder()
-                .loginType("KAKAO")
-                .email(email)
-                .kakaoName(kakaoName)
-                .authority(Authority.ROLE_USER)
-                .build();
+            // JSON Parsing (-> kakaoAccountDto)
+            ObjectMapper objectMapper = new ObjectMapper();
+            KakaoAccountDto kakaoAccountDto = null;
+            try {
+                kakaoAccountDto = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountDto.class);
+            }
+
+            catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+
+            // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
+            String email = kakaoAccountDto.getKakao_account().getEmail();
+            String kakaoName = kakaoAccountDto.getKakao_account().getProfile().getNickname();
+            System.out.println("email: "+ email);
+            System.out.println("kakaoName: "+ kakaoName);
+
+            return Account.builder()
+                    .loginType("KAKAO")
+                    .email(email)
+                    .kakaoName(kakaoName)
+                    .authority(Authority.ROLE_USER)
+                    .build();
+        }
+
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     /* login 요청 보내는 회원가입 유무 판단해 분기 처리 */
@@ -169,40 +189,4 @@ public class AuthService {
         return headers;
     }
 
-    /* 회원가입 요청 처리 */
-    public ResponseEntity<SignupResponseDto> kakaoSignup(@RequestBody SignupRequestDto requestDto) {
-        // 받아온 정보 DB에 저장
-        Account newAccount = Account.builder()
-                .loginType("kakao")
-                .authority(Authority.ROLE_USER)
-                .email(requestDto.getAccount().getEmail())
-                .kakaoName(requestDto.getAccount().getKakaoName())
-                .nickname(requestDto.getNickname())
-                .picture(requestDto.getPicture())
-                .build();
-        accountRepository.save(newAccount);
-
-        // 회원가입 상황에 대해 토큰을 발급하고 헤더와 쿠키에 배치
-        TokenDto tokenDto = securityService.signup(requestDto);
-        saveRefreshToken(newAccount, tokenDto);
-        HttpHeaders headers = setTokenHeaders(tokenDto);
-
-        // 응답 작성
-        SignupResponseDto responseDto = new SignupResponseDto();
-        responseDto.setAccount(accountRepository.findByEmail(requestDto.getAccount().getEmail())
-                .orElseThrow(CEmailLoginFailedException::new));
-        responseDto.setResult("회원가입이 완료되었습니다.");
-        return ResponseEntity.ok().headers(headers).body(responseDto);
-    }
-
-    /* Refresh Token 을 Repository 에 저장하는 메소드 */
-    public void saveRefreshToken(Account account, TokenDto tokenDto) {
-        RefreshToken refreshToken = RefreshToken.builder()
-                .key(account.getId())
-                .token(tokenDto.getRefreshToken())
-                .build();
-        tokenRepository.save(refreshToken);
-        System.out.println("토큰 저장이 완료되었습니다 : 계정 아이디 - " + account.getId() + ", refresh token - " + tokenDto.getRefreshToken());
-    }
-
-}
+}//endClass

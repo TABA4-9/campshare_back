@@ -6,8 +6,8 @@ import TABA4_9.CampShare.Entity.UploadResultDto;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,19 +23,23 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 public class ProductController {
-    @Autowired
-    private ProductService productService;
-    @Autowired
-    private ProductImageService productImageService;
+
+    private final ProductService productService;
+    private final ProductImageService productImageService;
     @GetMapping("/product/data/main")
     public Product[] getThreeProduct(){
-        Product[] product = new Product[3];
 
-        product[0]=productService.findById(1L);
-        product[1]=productService.findById(2L);
-        product[2]=productService.findById(3L);
+        Optional<Product> product1 = productService.findById(1L);
+        Optional<Product> product2 = productService.findById(2L);
+        Optional<Product> product3 = productService.findById(3L);
+
+        Product[] product = new Product[3];
+        product[0] = product1.orElseGet(() -> null);
+        product[1] = product2.orElseGet(() -> null);
+        product[2] = product3.orElseGet(() -> null);
         return product;
     }
 
@@ -44,8 +48,9 @@ public class ProductController {
         List<Product> itemList = productService.findAll();
         Product[] product = new Product[itemList.size()];
         itemList.toArray(product);
-        System.out.println("Product List : " + Arrays.toString(product));
+        log.info("Product List : {}", Arrays.toString(product));
         return product;
+
     }
 
     @Value("${image.upload.path}") // application.properties의 변수
@@ -56,10 +61,7 @@ public class ProductController {
         int length = uploadFiles.length;
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
-        log.info("Upload Files={}", uploadFiles);
-
-
-
+        log.info("Upload Files={}", (Object) uploadFiles);
 
         for (int i=0; i<uploadFiles.length; i++) {
             log.info("enter for loop");
@@ -93,11 +95,11 @@ public class ProductController {
 
             productImage.setUuid(uuid);
             productImage.setImagePath(String.valueOf(savePath));
-            System.out.println("ProductImage : " + productImage);
+            log.info("ProductImage : {}", productImage);
             try {
-                System.out.println("Tibero 저장 시도");
+                log.info("Tibero 저장 시도");
                 productImageService.save(productImage);
-                System.out.println("Tibero 저장 성공");
+                log.info("Tibero 저장 성공");
 
                 uploadFiles[i].transferTo(savePath);// 실제 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
@@ -105,7 +107,7 @@ public class ProductController {
                 log.info("ResultDtoList (in try):{}", resultDtoList);
 
             }catch (IOException e){
-                e.printStackTrace();
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }//endFor
         log.info("ResultDtoList (before return):{}", resultDtoList);
@@ -115,18 +117,17 @@ public class ProductController {
     private String makeFolder() {
 
         String str = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        System.out.println("Data str : " + str);
+        log.info("Data str : {}", str);
 
         String folderPath = str.replace("/", File.separator);
-        System.out.println("Folder Path : " + folderPath);
+        log.info("Folder Path : {}", folderPath);
 
-        // make folder ----
+        // make folder
         File uploadPatheFolder = new File(uploadPath, folderPath);
 
         if(!uploadPatheFolder.exists()){
             uploadPatheFolder.mkdirs();
         }
-
         return folderPath;
     }
 }

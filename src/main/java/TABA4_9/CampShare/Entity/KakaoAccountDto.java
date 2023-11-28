@@ -1,10 +1,11 @@
 package TABA4_9.CampShare.Entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Properties;
 
-@Data
+@Getter @Setter
 public class KakaoAccountDto {
 
     public Long id;
@@ -12,7 +13,7 @@ public class KakaoAccountDto {
     public Properties properties;
     public KakaoAccount kakao_account;
 
-    @Data
+    @Getter @Setter
     public static class KakaoAccount {
         public Boolean profile_nickname_needs_agreement;
         public Boolean email_needs_agreement;
@@ -23,7 +24,7 @@ public class KakaoAccountDto {
         public String email;
         public KakaoProfile profile;
 
-        @Data
+        @Getter @Setter
         public static class KakaoProfile {
             public String nickname;
         }

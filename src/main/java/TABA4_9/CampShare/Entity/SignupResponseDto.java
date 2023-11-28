@@ -1,8 +1,10 @@
 package TABA4_9.CampShare.Entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class SignupResponseDto {
 
     Account account;

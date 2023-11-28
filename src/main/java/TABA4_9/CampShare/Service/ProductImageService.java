@@ -2,21 +2,23 @@ package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Repository.ProductImageRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ProductImageService {
-    @Autowired
-    ProductImageRepository productImageRepository;
+
+    private final ProductImageRepository productImageRepository;
 
     public String save(ProductImage productImage){
         productImageRepository.save(productImage);
         return productImage.getUuid();
     }
 
-    public ProductImage findById(Long id) {
-        return productImageRepository.findById(id);
+    public Optional<ProductImage> findById(Long id) {
+        return productImageRepository.findById(String.valueOf(id));
     }
 
     public ProductImage findByUuid(String uuid) {
