@@ -2,6 +2,7 @@ package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.Entity.PostProduct;
 import TABA4_9.CampShare.Repository.PostProductRepository;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class PostProductService {
 
 
@@ -17,11 +18,15 @@ public class PostProductService {
     public PostProduct save(PostProduct postProduct){
         return postProductRepository.save(postProduct);
     }
-    public Optional<PostProduct> find(int id){
+    public Optional<PostProduct> findById(Long id){
         return postProductRepository.findById(id);
     }
 
-    public void remove(PostProduct  postProduct){
+    public Long saveGetId(PostProduct postProduct){
+        return postProductRepository.save(postProduct).getId();
+    }
+
+    public void delete(PostProduct  postProduct){
         postProductRepository.delete(postProduct);
     }
 

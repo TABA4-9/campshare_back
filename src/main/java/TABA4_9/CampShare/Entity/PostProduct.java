@@ -6,6 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.sql.Timestamp;
 
 /**
 name String 상품 이름
@@ -42,6 +43,8 @@ id가 포함된 object로 전달
 @Entity
 @Data
 public class PostProduct {
+
+
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     private Long id;
@@ -58,5 +61,9 @@ public class PostProduct {
     private String address;
 
     private Long userID;
+
+    private Boolean isLended;
+
+    private String  timestamp;
 
 }

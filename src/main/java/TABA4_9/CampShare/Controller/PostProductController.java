@@ -1,25 +1,19 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Entity.PostProduct;
-import TABA4_9.CampShare.Repository.PostProductRepository;
 import TABA4_9.CampShare.Service.PostProductService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.FluentQuery;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * name String 상품 이름
@@ -30,21 +24,15 @@ import java.util.function.Function;
  * brand String  상품 브랜드
  */
 @Slf4j
-@Controller
+@RestController
+@RequiredArgsConstructor
 public class PostProductController {
-    private ObjectMapper objectMapper = new ObjectMapper();
 
-    private PostProductRepositoryController itemRepository = PostProductRepositoryController.getInstance();
-    public PostProduct postProductFinal;
+    private static Long sequence = 0L;
+    public final PostProductService postProductService;
 
-
-    public PostProductRepository postProductRepository;
-    public PostProductController() {
-    }
 
     /**
-     * @param product
-     * @throws IOException name String 상품 이름
      *                     <p>
      *                     period String 기간 설정
      *                     <p>
@@ -58,21 +46,10 @@ public class PostProductController {
      *                     <p>
      *                     Responses200: OK
      */
-    @ResponseBody
+
     @PostMapping("/post/nextPage")
-    public PostProduct postProduct1(@RequestBody PostProduct product) throws IOException {
-        log.info("/post/nextPage start, product={}", product);
-        postProductFinal = new PostProduct();
-        postProductFinal.setName(product.getName());
-        postProductFinal.setPeriod(product.getPeriod());
-        postProductFinal.setCategory(product.getCategory());
-        postProductFinal.setHeadcount(product.getHeadcount());
-        postProductFinal.setUsingYear(product.getUsingYear());
-        postProductFinal.setBrand(product.getBrand());
-        postProductFinal.setBrand(product.getBrand());
-        itemRepository.saveID(postProductFinal);
-        log.info("/post/nextPage end, product={}", postProductFinal);
-        return postProductFinal;
+    public String postProduct1(@RequestBody PostProduct product) throws IOException {
+        return minPrice(product);
     }
 
 
@@ -92,24 +69,23 @@ public class PostProductController {
      * id가 포함된 object로 전달
      */
 
-    @ResponseBody
+
     @PostMapping("/post/submit")
     public PostProduct postProduct2(@RequestBody PostProduct product) throws IOException {
-        log.info("/post/submit start, product={}", product);
-        postProductFinal.setPrice(product.getPrice());
-        postProductFinal.setExplanation(product.getExplanation());
-        postProductFinal.setImage(product.getImage());
-        postProductFinal.setAddress(product.getAddress());
-        postProductFinal.setUserID(product.getUserID());
-        PostProduct returnData = itemRepository.save(postProductFinal);
-
-        //db save
-//        PostProductService postProductService = new PostProductService(postProductRepository);
-//        postProductService.save(returnData);
-        //
-        log.info("/post/submit end, product={}", postProductFinal);
-        log.info("/post/submit final end, itemRepository={}", itemRepository);
-        return returnData;
+        PostProduct postProductFinal = product;
+        postProductFinal.setTimestamp(setTimeStamp());
+        postProductService.save(postProductFinal);
+        return postProductFinal;
     }
 
+    public String minPrice(PostProduct postProduct){
+        // /post/nextpage 에서 받은 데이터로 최저가 찾아서 String으로 return
+        return "서비스 준비중.";
+    }
+
+    public String setTimeStamp() {
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return simpleDateFormat.format(timestamp);
+    }
 }
