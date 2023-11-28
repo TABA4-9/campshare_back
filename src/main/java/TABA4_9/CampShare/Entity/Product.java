@@ -12,14 +12,14 @@ import javax.persistence.Id;
 public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
-    private int id;
+    private Long id;
     private String name;
     private String category;
-    private int headcount;
+    private Long headcount;
     private String explanation;
-    private int price;
+    private Long price;
     private String image;
     private String brand;
-    private int usingYear;
+    private Long usingYear;
     private String period;
 }
