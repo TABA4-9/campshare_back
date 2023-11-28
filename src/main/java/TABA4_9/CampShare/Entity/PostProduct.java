@@ -1,12 +1,13 @@
 package TABA4_9.CampShare.Entity;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.sql.Timestamp;
 
 /**
 name String 상품 이름
@@ -41,7 +42,7 @@ id가 포함된 object로 전달
  */
 
 @Entity
-@Data
+@Getter @Setter
 public class PostProduct {
 
 
@@ -62,7 +63,7 @@ public class PostProduct {
 
     private Long userID;
 
-    private Boolean isLended;
+    private Boolean isRented;
 
     private String  timestamp;
 
