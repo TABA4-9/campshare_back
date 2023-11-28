@@ -1,29 +1,28 @@
 package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.Entity.PostProduct;
-import TABA4_9.CampShare.Repository.PostProductInterface;
 import TABA4_9.CampShare.Repository.PostProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class PostProductService {
 
-    @Autowired
-    PostProductInterface postProductInterface;
-    public PostProduct write(PostProduct postProduct){
-        return postProductInterface.save(postProduct);
+
+    final PostProductRepository postProductRepository ;
+    public PostProduct save(PostProduct postProduct){
+        return postProductRepository.save(postProduct);
     }
     public Optional<PostProduct> find(int id){
-        return postProductInterface.findById(id);
+        return postProductRepository.findById(id);
     }
 
     public void remove(PostProduct  postProduct){
-        postProductInterface.delete(postProduct);
+        postProductRepository.delete(postProduct);
     }
 
 
