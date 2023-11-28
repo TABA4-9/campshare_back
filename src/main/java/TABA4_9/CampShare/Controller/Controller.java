@@ -1,19 +1,31 @@
 package TABA4_9.CampShare.Controller;
+import org.springframework.web.bind.annotation.*;
+import java.io.File;
 
-import TABA4_9.CampShare.Entity.Entity;
-import TABA4_9.CampShare.Service.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.error.ErrorController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+@RestController
+public class Controller /*implements ErrorController*/{
+    /*
+    @GetMapping("/")
+    public void index(){
+        String path = "./image"; //폴더 경로
+        File Folder = new File(path);
 
-import java.util.HashMap;
+        // 해당 디렉토리가 없을경우 디렉토리를 생성합니다.
+        if (!Folder.exists()) {
+            try{
+                Folder.mkdir(); //폴더 생성합니다.
+                System.out.println("폴더가 생성되었습니다.");
+            }
+            catch(Exception e){
+                e.getStackTrace();
+            }
+        }else {
+            System.out.println("이미 폴더가 생성되어 있습니다.");
+        }
 
-@org.springframework.stereotype.Controller
-public class Controller implements ErrorController{
-
+    }
+*/
+/*
     private Service service;
 
     @GetMapping({"/", "/error"})
@@ -21,14 +33,12 @@ public class Controller implements ErrorController{
         return "index.html";
     }
 
-    @ResponseBody
     @PostMapping("/postData")
     public void postData(@RequestBody Entity entity){
         service.write(entity);
         System.out.println("Saved <name: " + entity.getName() + ", content: " + entity.getContent()+">");
     }
 
-    @ResponseBody
     @GetMapping("/getData")
     public Entity getData(){
         Entity res = new Entity();
@@ -36,5 +46,6 @@ public class Controller implements ErrorController{
         res.setContent("server response");
         return res;
     }
+*/
 
-}
+}//endClass

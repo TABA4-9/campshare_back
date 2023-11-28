@@ -134,10 +134,7 @@ public class AuthService {
 
 
         try {
-            /* 에러 구간 시작 */
             TokenDto tokenDto = securityService.login(account.getEmail());
-            /* 에러 구간 끝 */
-
             System.out.println("tokenDto: "+tokenDto);
             loginResponseDto.setLoginSuccess(true);
 
