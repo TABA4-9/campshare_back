@@ -5,7 +5,8 @@ import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Entity.UploadResultDto;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
-import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @RestController
 public class ProductController {
     @Autowired
@@ -54,11 +56,15 @@ public class ProductController {
         int length = uploadFiles.length;
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
-        System.out.println("Upload Files : " + uploadFiles);
+        log.info("Upload Files={}", uploadFiles);
 
-        for (int i=0; i<length; i++) {
-            System.out.println("for문 진입");
+
+
+
+        for (int i=0; i<uploadFiles.length; i++) {
+            log.info("enter for loop");
             // 이미지 파일만 업로드 가능
+
             if(!Objects.requireNonNull(uploadFiles[i].getContentType()).startsWith("image")){
                 // 이미지가 아닌경우 403 Forbidden 반환
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -66,11 +72,11 @@ public class ProductController {
 
             // 실제 파일 이름 IE나 Edge는 전체 경로가 들어오므로
             String originalName = uploadFiles[i].getOriginalFilename();
-            System.out.println("Original Name: " + originalName);
+            log.info("Original Name={}", originalName);
 
             assert originalName != null;
             String fileName = originalName.substring(originalName.lastIndexOf("\\") + 1);
-            System.out.println("File Name : " + fileName);
+            log.info("File Name={}", fileName);
 
             // 날짜 폴더 생성
             String folderPath = makeFolder();
@@ -80,10 +86,10 @@ public class ProductController {
 
             //저장할 파일 이름
             String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + fileName;
-            System.out.println("Save Name : " + saveName);
+            log.info("Save Name={}", saveName);
 
             Path savePath = Paths.get(saveName);
-            System.out.println("Save Path : " + savePath);
+            log.info("Save Path={}", savePath);
 
             productImage.setUuid(uuid);
             productImage.setImagePath(String.valueOf(savePath));
@@ -95,15 +101,14 @@ public class ProductController {
 
                 uploadFiles[i].transferTo(savePath);// 실제 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
-                System.out.println("ResultDtoList (in try): " + resultDtoList);
 
-            }
-            catch (IOException e){
+                log.info("ResultDtoList (in try):{}", resultDtoList);
+
+            }catch (IOException e){
                 e.printStackTrace();
             }
         }//endFor
-
-        System.out.println("ResultDtoList (before return): " + resultDtoList);
+        log.info("ResultDtoList (before return):{}", resultDtoList);
         return new ResponseEntity<>(resultDtoList, HttpStatus.OK);
     }//endMethod
 
