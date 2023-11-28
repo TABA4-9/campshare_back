@@ -37,6 +37,15 @@ public class ProductController {
         return product;
     }
 
+    @GetMapping("/product/data/category")
+    public Product[] getAllProduct(){
+        List<Product> itemList = productService.findAll();
+        Product[] product = new Product[itemList.size()];
+        itemList.toArray(product);
+        System.out.println("Product List : " + Arrays.toString(product));
+        return product;
+    }
+
     @Value("${image.upload.path}") // application.properties의 변수
     private String uploadPath;
 
