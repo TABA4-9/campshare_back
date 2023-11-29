@@ -30,27 +30,26 @@ public class ProductController {
     private final ProductService productService;
     private final ProductImageService productImageService;
     @GetMapping("/product/data/main")
-    public Product[] getThreeProduct(){
+    public List<Product> getThreeProduct(){
 
         Optional<Product> product1 = productService.findById(1L);
         Optional<Product> product2 = productService.findById(2L);
         Optional<Product> product3 = productService.findById(3L);
 
-        Product[] product = new Product[3];
-        product[0] = product1.orElseGet(() -> null);
-        product[1] = product2.orElseGet(() -> null);
-        product[2] = product3.orElseGet(() -> null);
+        List<Product> product = new ArrayList<>(3);
+
+        product.add(product1.orElseThrow());
+        product.add(product2.orElseThrow());
+        product.add(product3.orElseThrow());
+
         return product;
     }
 
     @GetMapping("/product/data/category")
-    public Product[] getAllProduct(){
+    public List<Product> getAllProduct(){
         List<Product> itemList = productService.findAll();
-        Product[] product = new Product[itemList.size()];
-        itemList.toArray(product);
-        log.info("Product List : {}", Arrays.toString(product));
-        return product;
-
+        log.debug("Product List : {}", itemList.toString());
+        return itemList;
     }
 
     @Value("${image.upload.path}") // application.properties의 변수
@@ -61,10 +60,10 @@ public class ProductController {
         int length = uploadFiles.length;
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
-        log.info("Upload Files={}", (Object) uploadFiles);
+        log.debug("Upload Files={}", (Object) uploadFiles);
 
-        for (int i=0; i<uploadFiles.length; i++) {
-            log.info("enter for loop");
+        for (int i=0; i<length; i++) {
+            log.debug("enter for loop");
             // 이미지 파일만 업로드 가능
 
             if(!Objects.requireNonNull(uploadFiles[i].getContentType()).startsWith("image")){
@@ -74,11 +73,11 @@ public class ProductController {
 
             // 실제 파일 이름 IE나 Edge는 전체 경로가 들어오므로
             String originalName = uploadFiles[i].getOriginalFilename();
-            log.info("Original Name={}", originalName);
+            log.debug("Original Name={}", originalName);
 
             assert originalName != null;
             String fileName = originalName.substring(originalName.lastIndexOf("\\") + 1);
-            log.info("File Name={}", fileName);
+            log.debug("File Name={}", fileName);
 
             // 날짜 폴더 생성
             String folderPath = makeFolder();
@@ -88,39 +87,40 @@ public class ProductController {
 
             //저장할 파일 이름
             String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + fileName;
-            log.info("Save Name={}", saveName);
+            log.debug("Save Name={}", saveName);
 
             Path savePath = Paths.get(saveName);
-            log.info("Save Path={}", savePath);
+            log.debug("Save Path={}", savePath);
 
             productImage.setUuid(uuid);
             productImage.setImagePath(String.valueOf(savePath));
-            log.info("ProductImage : {}", productImage);
+            log.debug("ProductImage : {}", productImage);
+
             try {
-                log.info("Tibero 저장 시도");
+                log.debug("Tibero 저장 시도");
                 productImageService.save(productImage);
-                log.info("Tibero 저장 성공");
+                log.debug("Tibero 저장 성공");
 
                 uploadFiles[i].transferTo(savePath);// 실제 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
 
-                log.info("ResultDtoList (in try):{}", resultDtoList);
+                log.debug("ResultDtoList (in try):{}", resultDtoList);
 
             }catch (IOException e){
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }//endFor
-        log.info("ResultDtoList (before return):{}", resultDtoList);
+        log.debug("ResultDtoList (before return):{}", resultDtoList);
         return new ResponseEntity<>(resultDtoList, HttpStatus.OK);
     }//endMethod
 
     private String makeFolder() {
 
         String str = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        log.info("Data str : {}", str);
+        log.debug("Data str : {}", str);
 
         String folderPath = str.replace("/", File.separator);
-        log.info("Folder Path : {}", folderPath);
+        log.debug("Folder Path : {}", folderPath);
 
         // make folder
         File uploadPatheFolder = new File(uploadPath, folderPath);

@@ -21,8 +21,8 @@ public class ProductImageService {
         return productImageRepository.findById(String.valueOf(id));
     }
 
-    public ProductImage findByUuid(String uuid) {
-        return productImageRepository.findByUuid(uuid);
+    public Optional<ProductImage> findByUuid(String uuid) {
+        return Optional.ofNullable(productImageRepository.findByUuid(uuid));
     }
 
     public void delete(ProductImage productImage){

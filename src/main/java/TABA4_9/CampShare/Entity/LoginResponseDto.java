@@ -3,10 +3,9 @@ package TABA4_9.CampShare.Entity;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Getter @Setter
 public class LoginResponseDto {
-    public boolean loginSuccess;
-    public Account account;
-    public String kakaoAccessToken;
+    private boolean loginSuccess;
+    private Account account;
+    private String kakaoAccessToken;
 }

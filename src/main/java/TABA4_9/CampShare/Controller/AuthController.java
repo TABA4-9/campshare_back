@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 /*
 
@@ -19,12 +20,11 @@ public class AuthController {
     private final AuthService authService;
 
     @GetMapping("/login/oauth2/code/kakao")
-    public ResponseEntity<LoginResponseDto> kakaoLogin(HttpServletRequest request) {
+    public ResponseEntity<LoginResponseDto> kakaoLogin(@Valid HttpServletRequest request) {
 
         String code = request.getParameter("code");
-        String kakaoAccessToken = authService.getKakaoAccessToken(code).getAccess_token();
+        String kakaoAccessToken = authService.getKakaoAccessToken(code).getAccessToken();
         return authService.kakaoLogin(kakaoAccessToken);
     }
 
-
-}
+}//endClass
