@@ -1,7 +1,7 @@
 package TABA4_9.CampShare;
 
 import TABA4_9.CampShare.Entity.Authority;
-import TABA4_9.CampShare.Entity.TokenDto;
+import TABA4_9.CampShare.Dto.TokenDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

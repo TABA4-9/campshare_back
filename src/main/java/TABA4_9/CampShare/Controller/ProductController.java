@@ -1,8 +1,9 @@
 package TABA4_9.CampShare.Controller;
 
+import TABA4_9.CampShare.Dto.DetailDto;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
-import TABA4_9.CampShare.Entity.UploadResultDto;
+import TABA4_9.CampShare.Dto.UploadResultDto;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
 
@@ -130,4 +131,14 @@ public class ProductController {
         }
         return folderPath;
     }
+
+    @PostMapping("/detail/{id}")
+    public Optional<Product> detailProduct(@PathVariable("id") Long productId, @RequestBody DetailDto detailDto) {
+        log.debug("productId = {}, userId = {}, detailPageLog = {}", productId, detailDto.getUserId(), detailDto.getDetailPageLog());
+
+        Optional<Product> product = productService.findById(productId);
+
+        return Optional.of(product.orElseThrow());
+    }
+
 }

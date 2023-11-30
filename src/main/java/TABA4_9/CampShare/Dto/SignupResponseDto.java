@@ -1,5 +1,6 @@
-package TABA4_9.CampShare.Entity;
+package TABA4_9.CampShare.Dto;
 
+import TABA4_9.CampShare.Entity.Account;
 import lombok.Getter;
 import lombok.Setter;
 

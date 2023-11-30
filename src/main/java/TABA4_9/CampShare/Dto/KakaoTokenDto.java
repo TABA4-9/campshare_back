@@ -1,4 +1,4 @@
-package TABA4_9.CampShare.Entity;
+package TABA4_9.CampShare.Dto;
 
 
 import lombok.Getter;
