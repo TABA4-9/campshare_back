@@ -1,5 +1,6 @@
 package TABA4_9.CampShare.Controller;
 
+import TABA4_9.CampShare.Dto.DeleteDto;
 import TABA4_9.CampShare.Dto.DetailDto;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
@@ -131,6 +132,26 @@ public class ProductController {
         }
         return folderPath;
     }
+
+    @DeleteMapping("/product/delete")
+    public DeleteDto deleteProduct(@RequestParam Long productId){
+
+        DeleteDto deleteDto = new DeleteDto();
+
+        try{
+            productService.delete(productService.findById(productId).orElseThrow());
+            deleteDto.setDeleteSuccess(true);
+            deleteDto.setProductId(productId);
+        }
+
+        catch(Exception e){
+            deleteDto.setDeleteSuccess(false);
+            deleteDto.setProductId(productId);
+        }
+
+        return deleteDto;
+    }
+
 
     @PostMapping("/detail/{id}")
     public Optional<Product> detailProduct(@PathVariable("id") Long productId, @RequestBody DetailDto detailDto) {
