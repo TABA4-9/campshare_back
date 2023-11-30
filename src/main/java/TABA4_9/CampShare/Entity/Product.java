@@ -25,4 +25,8 @@ public class Product {
     private String brand;
     private String usingYear;
     private String period;
+    private String address;
+    private Long userID;
+    private Boolean isRented;
+    private String  timestamp;
 }

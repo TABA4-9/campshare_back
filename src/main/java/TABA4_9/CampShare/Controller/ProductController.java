@@ -2,6 +2,8 @@ package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Dto.DeleteDto;
 import TABA4_9.CampShare.Dto.DetailDto;
+import TABA4_9.CampShare.Dto.UpdateDto;
+import TABA4_9.CampShare.Entity.PostProduct;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Dto.UploadResultDto;
@@ -131,6 +133,28 @@ public class ProductController {
             uploadPatheFolder.mkdirs();
         }
         return folderPath;
+    }
+
+    @PutMapping("/product/update")
+    public UpdateDto updateProduct(@RequestBody Product updatedProduct){
+
+        UpdateDto updateDto = new UpdateDto();
+
+        try{
+            log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
+            productService.save(updatedProduct);
+            log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
+            updateDto.setUpdateSuccess(true);
+            updateDto.setUpdateProduct(updatedProduct);
+
+        }
+
+        catch(Exception e){
+            updateDto.setUpdateSuccess(false);
+            updateDto.setUpdateProduct(null);
+        }
+
+        return updateDto;
     }
 
     @DeleteMapping("/product/delete")
