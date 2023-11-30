@@ -1,12 +1,14 @@
-package TABA4_9.CampShare.Entity;
+package TABA4_9.CampShare.Dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 public class UploadResultDto {
 

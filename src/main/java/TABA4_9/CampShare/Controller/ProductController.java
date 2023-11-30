@@ -1,13 +1,17 @@
 package TABA4_9.CampShare.Controller;
 
+import TABA4_9.CampShare.Dto.DeleteDto;
+import TABA4_9.CampShare.Dto.DetailDto;
+import TABA4_9.CampShare.Dto.UpdateDto;
+import TABA4_9.CampShare.Entity.PostProduct;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
-import TABA4_9.CampShare.Entity.UploadResultDto;
+import TABA4_9.CampShare.Dto.UploadResultDto;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,29 +27,33 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 public class ProductController {
-    @Autowired
-    private ProductService productService;
-    @Autowired
-    private ProductImageService productImageService;
-    @GetMapping("/product/data/main")
-    public Product[] getThreeProduct(){
-        Product[] product = new Product[3];
 
-        product[0]=productService.findById(1L);
-        product[1]=productService.findById(2L);
-        product[2]=productService.findById(3L);
+    private final ProductService productService;
+    private final ProductImageService productImageService;
+    @GetMapping("/product/data/main")
+    public List<Product> getThreeProduct(){
+
+        Optional<Product> product1 = productService.findById(1L);
+        Optional<Product> product2 = productService.findById(2L);
+        Optional<Product> product3 = productService.findById(3L);
+
+        List<Product> product = new ArrayList<>(3);
+
+        product.add(product1.orElseThrow());
+        product.add(product2.orElseThrow());
+        product.add(product3.orElseThrow());
+
         return product;
     }
 
     @GetMapping("/product/data/category")
-    public Product[] getAllProduct(){
+    public List<Product> getAllProduct(){
         List<Product> itemList = productService.findAll();
-        Product[] product = new Product[itemList.size()];
-        itemList.toArray(product);
-        System.out.println("Product List : " + Arrays.toString(product));
-        return product;
+        log.debug("Product List : {}", itemList.toString());
+        return itemList;
     }
 
     @Value("${image.upload.path}") // application.properties의 변수
@@ -56,13 +64,10 @@ public class ProductController {
         int length = uploadFiles.length;
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
-        log.info("Upload Files={}", uploadFiles);
+        log.debug("Upload Files={}", (Object) uploadFiles);
 
-
-
-
-        for (int i=0; i<uploadFiles.length; i++) {
-            log.info("enter for loop");
+        for (int i=0; i<length; i++) {
+            log.debug("enter for loop");
             // 이미지 파일만 업로드 가능
 
             if(!Objects.requireNonNull(uploadFiles[i].getContentType()).startsWith("image")){
@@ -72,11 +77,11 @@ public class ProductController {
 
             // 실제 파일 이름 IE나 Edge는 전체 경로가 들어오므로
             String originalName = uploadFiles[i].getOriginalFilename();
-            log.info("Original Name={}", originalName);
+            log.debug("Original Name={}", originalName);
 
             assert originalName != null;
             String fileName = originalName.substring(originalName.lastIndexOf("\\") + 1);
-            log.info("File Name={}", fileName);
+            log.debug("File Name={}", fileName);
 
             // 날짜 폴더 생성
             String folderPath = makeFolder();
@@ -86,47 +91,99 @@ public class ProductController {
 
             //저장할 파일 이름
             String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + fileName;
-            log.info("Save Name={}", saveName);
+            log.debug("Save Name={}", saveName);
 
             Path savePath = Paths.get(saveName);
-            log.info("Save Path={}", savePath);
+            log.debug("Save Path={}", savePath);
 
             productImage.setUuid(uuid);
             productImage.setImagePath(String.valueOf(savePath));
-            System.out.println("ProductImage : " + productImage);
+            log.debug("ProductImage : {}", productImage);
+
             try {
-                System.out.println("Tibero 저장 시도");
+                log.debug("Tibero 저장 시도");
                 productImageService.save(productImage);
-                System.out.println("Tibero 저장 성공");
+                log.debug("Tibero 저장 성공");
 
                 uploadFiles[i].transferTo(savePath);// 실제 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
 
-                log.info("ResultDtoList (in try):{}", resultDtoList);
+                log.debug("ResultDtoList (in try):{}", resultDtoList);
 
             }catch (IOException e){
-                e.printStackTrace();
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }//endFor
-        log.info("ResultDtoList (before return):{}", resultDtoList);
+        log.debug("ResultDtoList (before return):{}", resultDtoList);
         return new ResponseEntity<>(resultDtoList, HttpStatus.OK);
     }//endMethod
 
     private String makeFolder() {
 
         String str = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        System.out.println("Data str : " + str);
+        log.debug("Data str : {}", str);
 
         String folderPath = str.replace("/", File.separator);
-        System.out.println("Folder Path : " + folderPath);
+        log.debug("Folder Path : {}", folderPath);
 
-        // make folder ----
+        // make folder
         File uploadPatheFolder = new File(uploadPath, folderPath);
 
         if(!uploadPatheFolder.exists()){
             uploadPatheFolder.mkdirs();
         }
-
         return folderPath;
     }
+
+    @PutMapping("/product/update")
+    public UpdateDto updateProduct(@RequestBody Product updatedProduct){
+
+        UpdateDto updateDto = new UpdateDto();
+
+        try{
+            log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
+            productService.save(updatedProduct);
+            log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
+            updateDto.setUpdateSuccess(true);
+            updateDto.setUpdateProduct(updatedProduct);
+
+        }
+
+        catch(Exception e){
+            updateDto.setUpdateSuccess(false);
+            updateDto.setUpdateProduct(null);
+        }
+
+        return updateDto;
+    }
+
+    @DeleteMapping("/product/delete")
+    public DeleteDto deleteProduct(@RequestParam Long productId){
+
+        DeleteDto deleteDto = new DeleteDto();
+
+        try{
+            productService.delete(productService.findById(productId).orElseThrow());
+            deleteDto.setDeleteSuccess(true);
+            deleteDto.setProductId(productId);
+        }
+
+        catch(Exception e){
+            deleteDto.setDeleteSuccess(false);
+            deleteDto.setProductId(productId);
+        }
+
+        return deleteDto;
+    }
+
+
+    @PostMapping("/detail/{id}")
+    public Optional<Product> detailProduct(@PathVariable("id") Long productId, @RequestBody DetailDto detailDto) {
+        log.debug("productId = {}, userId = {}, detailPageLog = {}", productId, detailDto.getUserId(), detailDto.getDetailPageLog());
+
+        Optional<Product> product = productService.findById(productId);
+
+        return Optional.of(product.orElseThrow());
+    }
+
 }

@@ -1,14 +1,17 @@
 package TABA4_9.CampShare.Entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-import javax.persistence.*;
 import javax.persistence.Entity;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
 
 @Entity
-@Data
+@Getter
+@Setter
 public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
@@ -22,4 +25,8 @@ public class Product {
     private String brand;
     private String usingYear;
     private String period;
+    private String address;
+    private Long userID;
+    private Boolean isRented;
+    private String  timestamp;
 }
