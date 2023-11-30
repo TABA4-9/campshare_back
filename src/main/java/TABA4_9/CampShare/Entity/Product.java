@@ -2,6 +2,7 @@ package TABA4_9.CampShare.Entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -21,12 +22,12 @@ public class Product {
     private Long headcount;
     private String explanation;
     private Long price;
-    private String image;
+    private String imagePath;
     private String brand;
     private String usingYear;
     private String period;
     private String address;
     private Long userID;
     private Boolean isRented;
-    private String  timestamp;
+    private String timestamp;
 }
