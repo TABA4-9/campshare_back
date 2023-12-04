@@ -9,6 +9,8 @@ import TABA4_9.CampShare.Entity.*;
 import TABA4_9.CampShare.Repository.AccountRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-
+    private final ProductService productService;
     private final AccountRepository accountRepository;
     private final SecurityService securityService;
 
@@ -116,6 +118,9 @@ public class AuthService {
 
             // JSON Parsing (-> kakaoAccountDto)
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
             KakaoAccountDto kakaoAccountDto = null;
 
             try {
@@ -159,17 +164,23 @@ public class AuthService {
         log.debug("loginResponseDto: {}", loginResponseDto);
 
         try {
+            //로그인 성공
             TokenDto tokenDto = securityService.login(account.getEmail());
             log.debug("tokenDto: {}", tokenDto);
+            HttpHeaders headers = setTokenHeaders(tokenDto);
 
             loginResponseDto.setLoginSuccess(true);
-            HttpHeaders headers = setTokenHeaders(tokenDto);
+            loginResponseDto.setPostedProducts(productService.findAllByPostUserId(account.getId()));
+            loginResponseDto.setRentedProducts(productService.findAllByRentUserId(account.getId()));
+            log.debug("getPostedProducts : {}", loginResponseDto.getPostedProducts().orElseThrow().toString());
+            log.debug("getRentedProducts : {}", loginResponseDto.getRentedProducts().orElseThrow().toString());
             log.debug("return할 값: {}", ResponseEntity.ok().headers(headers).body(loginResponseDto));
 
             return ResponseEntity.ok().headers(headers).body(loginResponseDto);
         }
 
         catch (CEmailLoginFailedException e) {
+            //로그인 실패
             loginResponseDto.setLoginSuccess(false);
             log.debug("계정 정보 못 찾음");
             accountRepository.save(account);

@@ -17,16 +17,44 @@ public class Product {
     @Id
     private Long id;
     private String name;
+    private String startDate;
+    private String endDate;
     private String category;
-    private Long headcount;
+    private String headcount;
     private String explanation;
-    private Long price;
-    private String image;
+    private String price;
+    private String imagePath;
     private String brand;
     private String usingYear;
     private String period;
     private String address;
-    private Long userID;
+    private Long postUserId;
     private Boolean isRented;
-    private String  timestamp;
+    private Long rentUserId;
+    private String timestamp;
+
+    public Product() {
+
+    }
+
+    public Product(Product product){
+        id = product.getId();
+        name = product.getName();
+        startDate = product.getStartDate();
+        endDate = product.getEndDate();
+        category = product.getCategory();
+        headcount = product.getHeadcount();
+        explanation = product.getExplanation();
+        price = product.getPrice();
+        imagePath = product.getImagePath();
+        brand = product.getBrand();
+        usingYear = product.getUsingYear();
+        period = product.getPeriod();
+        address = product.getAddress();
+        postUserId = product.getPostUserId();
+        isRented = product.getIsRented();
+        rentUserId = product.getRentUserId();
+        timestamp = product.getTimestamp();
+    }
+
 }

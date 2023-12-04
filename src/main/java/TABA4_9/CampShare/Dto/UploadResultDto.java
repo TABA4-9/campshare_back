@@ -18,6 +18,12 @@ public class UploadResultDto {
 
     private String folderPath;
 
+    public UploadResultDto() {
+        fileName = null;
+        uuid = null;
+        folderPath = null;
+    }
+
     public String getImageURL(){
         try {
             return URLEncoder.encode(folderPath+"/" +uuid + fileName,"UTF-8");
