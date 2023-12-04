@@ -9,6 +9,8 @@ import TABA4_9.CampShare.Entity.*;
 import TABA4_9.CampShare.Repository.AccountRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -116,6 +118,9 @@ public class AuthService {
 
             // JSON Parsing (-> kakaoAccountDto)
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
             KakaoAccountDto kakaoAccountDto = null;
 
             try {
@@ -127,8 +132,8 @@ public class AuthService {
             }
 
             // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
-            String email = kakaoAccountDto.getKakao_account().getEmail();
-            String kakaoName = kakaoAccountDto.getKakao_account().getProfile().getNickname();
+            String email = kakaoAccountDto.getKakaoAccount().getEmail();
+            String kakaoName = kakaoAccountDto.getKakaoAccount().getProfile().getNickname();
             log.debug("email: {}", email);
             log.debug("kakaoName: {}", kakaoName);
 
@@ -188,7 +193,7 @@ public class AuthService {
     /* 토큰을 헤더에 배치 */
     public HttpHeaders setTokenHeaders(TokenDto tokenDto) {
         HttpHeaders headers = new HttpHeaders();
-        ResponseCookie cookie = ResponseCookie.from("RefreshToken", tokenDto.getRefresh_token())
+        ResponseCookie cookie = ResponseCookie.from("RefreshToken", tokenDto.getRefreshToken())
                 .path("/")
                 .maxAge(60*60*24*7) // 쿠키 유효기간 7일로 설정했음
                 .secure(true)
@@ -196,7 +201,7 @@ public class AuthService {
                 .httpOnly(true)
                 .build();
         headers.add("Set-cookie", cookie.toString());
-        headers.add("Authorization", tokenDto.getAccess_token());
+        headers.add("Authorization", tokenDto.getAccessToken());
 
         return headers;
     }

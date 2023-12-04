@@ -51,7 +51,7 @@ public class SecurityService {
         // signup 시에도 저장하고, 로그인시에도 저장하므로 존재하는 토큰을 찾기 위해 key 값이 필요
         RefreshToken refreshToken = RefreshToken.builder()
                 .key(account.getId())
-                .token(tokenDto.getRefresh_token())
+                .token(tokenDto.getRefreshToken())
                 .build();
         tokenRepository.save(refreshToken);
         System.out.println("토큰 발급과 저장을 완료했습니다.");
