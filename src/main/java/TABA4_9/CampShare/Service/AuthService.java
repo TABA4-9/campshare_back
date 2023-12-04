@@ -22,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-
+    private final ProductService productService;
     private final AccountRepository accountRepository;
     private final SecurityService securityService;
 
@@ -127,8 +127,8 @@ public class AuthService {
             }
 
             // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
-            String email = kakaoAccountDto.getKakaoAccount().getEmail();
-            String kakaoName = kakaoAccountDto.getKakaoAccount().getProfile().getNickname();
+            String email = kakaoAccountDto.getKakao_account().getEmail();
+            String kakaoName = kakaoAccountDto.getKakao_account().getProfile().getNickname();
             log.debug("email: {}", email);
             log.debug("kakaoName: {}", kakaoName);
 
@@ -159,17 +159,21 @@ public class AuthService {
         log.debug("loginResponseDto: {}", loginResponseDto);
 
         try {
+            //로그인 성공
             TokenDto tokenDto = securityService.login(account.getEmail());
             log.debug("tokenDto: {}", tokenDto);
+            HttpHeaders headers = setTokenHeaders(tokenDto);
 
             loginResponseDto.setLoginSuccess(true);
-            HttpHeaders headers = setTokenHeaders(tokenDto);
+            loginResponseDto.setPostedProducts(productService.findAllByPostUserId(account.getId()));
+            loginResponseDto.setRentedProducts(productService.findAllByRentUserId(account.getId()));
             log.debug("return할 값: {}", ResponseEntity.ok().headers(headers).body(loginResponseDto));
 
             return ResponseEntity.ok().headers(headers).body(loginResponseDto);
         }
 
         catch (CEmailLoginFailedException e) {
+            //로그인 실패
             loginResponseDto.setLoginSuccess(false);
             log.debug("계정 정보 못 찾음");
             accountRepository.save(account);
@@ -182,7 +186,7 @@ public class AuthService {
     /* 토큰을 헤더에 배치 */
     public HttpHeaders setTokenHeaders(TokenDto tokenDto) {
         HttpHeaders headers = new HttpHeaders();
-        ResponseCookie cookie = ResponseCookie.from("RefreshToken", tokenDto.getRefreshToken())
+        ResponseCookie cookie = ResponseCookie.from("RefreshToken", tokenDto.getRefresh_token())
                 .path("/")
                 .maxAge(60*60*24*7) // 쿠키 유효기간 7일로 설정했음
                 .secure(true)
@@ -190,7 +194,7 @@ public class AuthService {
                 .httpOnly(true)
                 .build();
         headers.add("Set-cookie", cookie.toString());
-        headers.add("Authorization", tokenDto.getAccessToken());
+        headers.add("Authorization", tokenDto.getAccess_token());
 
         return headers;
     }

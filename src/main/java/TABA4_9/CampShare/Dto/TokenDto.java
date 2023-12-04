@@ -9,8 +9,8 @@ import lombok.Setter;
 @Builder
 public class TokenDto {
 
-    private String grantType;
-    private String accessToken;
-    private String refreshToken;
-    private Long accessTokenExpiresIn;
+    private String grant_type;
+    private String access_token;
+    private String refresh_token;
+    private Long access_token_expires_in;
 }

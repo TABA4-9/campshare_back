@@ -26,8 +26,9 @@ public class Product {
     private String usingYear;
     private String period;
     private String address;
-    private Long userID;
+    private Long postUserId;
     private Boolean isRented;
+    private Long rentUserId;
     private String timestamp;
 
     public Product() {
@@ -46,8 +47,9 @@ public class Product {
         usingYear = product.getUsingYear();
         period = product.getPeriod();
         address = product.getAddress();
-        userID = product.getUserID();
+        postUserId = product.getPostUserId();
         isRented = product.getIsRented();
+        rentUserId = product.getRentUserId();
         timestamp = product.getTimestamp();
     }
 

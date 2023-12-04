@@ -54,8 +54,8 @@ public class ProductController {
     */
     @GetMapping("/product/data/category")
     public List<Product> getAllProduct(){
-        List<Product> productList = productService.findAll();
-        log.debug("Product List : {}", productList.toString());
+        List<Product> productList = productService.findAll().orElseThrow();
+        log.debug("Product List : {}", productList);
         return productList;
     }
     

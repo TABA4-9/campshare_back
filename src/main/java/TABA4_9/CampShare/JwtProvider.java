@@ -57,10 +57,10 @@ public class JwtProvider {
                 .compact();
 
         return TokenDto.builder()
-                .grantType(BEARER_TYPE)
-                .accessToken(accessToken)
-                .accessTokenExpiresIn(accessTokenExpiresIn.getTime())
-                .refreshToken(refreshToken)
+                .grant_type(BEARER_TYPE)
+                .access_token(accessToken)
+                .access_token_expires_in(accessTokenExpiresIn.getTime())
+                .refresh_token(refreshToken)
                 .build();
     }
 
