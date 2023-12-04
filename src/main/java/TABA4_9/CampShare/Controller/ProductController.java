@@ -5,6 +5,7 @@ import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
+import TABA4_9.CampShare.Service.SecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @RestController
 public class ProductController {
-
     private final ProductService productService;
     private final ProductImageService productImageService;
 
@@ -80,7 +80,7 @@ public class ProductController {
 
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
-
+        //product.setPostUserId(SecurityService.getCurrentAccountId());
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
         log.debug("Upload Files={}", (Object) uploadFiles);

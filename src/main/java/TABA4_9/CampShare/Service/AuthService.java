@@ -167,6 +167,8 @@ public class AuthService {
             loginResponseDto.setLoginSuccess(true);
             loginResponseDto.setPostedProducts(productService.findAllByPostUserId(account.getId()));
             loginResponseDto.setRentedProducts(productService.findAllByRentUserId(account.getId()));
+            log.debug("getPostedProducts : {}", loginResponseDto.getPostedProducts().orElseThrow().toString());
+            log.debug("getRentedProducts : {}", loginResponseDto.getRentedProducts().orElseThrow().toString());
             log.debug("return할 값: {}", ResponseEntity.ok().headers(headers).body(loginResponseDto));
 
             return ResponseEntity.ok().headers(headers).body(loginResponseDto);

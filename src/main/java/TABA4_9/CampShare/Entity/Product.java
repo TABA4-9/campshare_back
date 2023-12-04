@@ -17,6 +17,8 @@ public class Product {
     @Id
     private Long id;
     private String name;
+    private String startDate;
+    private String endDate;
     private String category;
     private String headcount;
     private String explanation;
@@ -38,6 +40,8 @@ public class Product {
     public Product(Product product){
         id = product.getId();
         name = product.getName();
+        startDate = product.getStartDate();
+        endDate = product.getEndDate();
         category = product.getCategory();
         headcount = product.getHeadcount();
         explanation = product.getExplanation();
