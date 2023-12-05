@@ -5,7 +5,8 @@ import TABA4_9.CampShare.Dto.KakaoAccountDto;
 import TABA4_9.CampShare.Dto.KakaoTokenDto;
 import TABA4_9.CampShare.Dto.LoginResponseDto;
 import TABA4_9.CampShare.Dto.TokenDto;
-import TABA4_9.CampShare.Entity.*;
+import TABA4_9.CampShare.Entity.Account;
+import TABA4_9.CampShare.Entity.Authority;
 import TABA4_9.CampShare.Repository.AccountRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -132,6 +133,7 @@ public class AuthService {
             }
 
             // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
+            assert kakaoAccountDto != null;
             String email = kakaoAccountDto.getKakaoAccount().getEmail();
             String kakaoName = kakaoAccountDto.getKakaoAccount().getProfile().getNickname();
             log.debug("email: {}", email);
@@ -167,13 +169,19 @@ public class AuthService {
             //로그인 성공
             TokenDto tokenDto = securityService.login(account.getEmail());
             log.debug("tokenDto: {}", tokenDto);
+
+            Account dbAccount = accountRepository.findByEmail(account.getEmail()).orElseThrow();
+            log.info("productService.findByPostUserId(account.getAccountId()).orElseThrow(): {}", productService.findByPostUserId(dbAccount.getAccountId()).orElseThrow());
+            log.debug("productService.findByRentUserId(account.getAccountId()).orElseThrow(): {}", productService.findByRentUserId(dbAccount.getAccountId()).orElseThrow());
+
             HttpHeaders headers = setTokenHeaders(tokenDto);
 
             loginResponseDto.setLoginSuccess(true);
-            loginResponseDto.setPostedProducts(productService.findAllByPostUserId(account.getId()));
-            loginResponseDto.setRentedProducts(productService.findAllByRentUserId(account.getId()));
-            log.debug("getPostedProducts : {}", loginResponseDto.getPostedProducts().orElseThrow().toString());
-            log.debug("getRentedProducts : {}", loginResponseDto.getRentedProducts().orElseThrow().toString());
+            loginResponseDto.setPostedProducts(productService.findByPostUserId(dbAccount.getAccountId()).orElseThrow());
+            loginResponseDto.setRentedProducts(productService.findByRentUserId(dbAccount.getAccountId()).orElseThrow());
+
+            log.debug("getPostedProducts : {}", loginResponseDto.getPostedProducts());
+            log.debug("getRentedProducts : {}", loginResponseDto.getRentedProducts());
             log.debug("return할 값: {}", ResponseEntity.ok().headers(headers).body(loginResponseDto));
 
             return ResponseEntity.ok().headers(headers).body(loginResponseDto);

@@ -12,7 +12,7 @@ import javax.persistence.Id;
 @Entity
 @Getter
 @Setter
-public class Product {
+public class Product{
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     private Long id;
@@ -26,7 +26,6 @@ public class Product {
     private String imagePath;
     private String brand;
     private String usingYear;
-    private String period;
     private String address;
     private Long postUserId;
     private Boolean isRented;
@@ -49,7 +48,6 @@ public class Product {
         imagePath = product.getImagePath();
         brand = product.getBrand();
         usingYear = product.getUsingYear();
-        period = product.getPeriod();
         address = product.getAddress();
         postUserId = product.getPostUserId();
         isRented = product.getIsRented();

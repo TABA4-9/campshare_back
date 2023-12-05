@@ -5,7 +5,6 @@ import TABA4_9.CampShare.Repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,12 +18,12 @@ public class ProductService {
     public Optional<Product> findById(Long id){
         return productRepository.findById(id);
     }
-    public Optional<List<Product>> findAllByPostUserId(Long postUserId){
-        return productRepository.findAllByPostUserId(postUserId);
+    public Optional<List<Product>> findByPostUserId(Long postUserId){
+        return productRepository.findByPostUserId(postUserId);
     }
 
-    public Optional<List<Product>> findAllByRentUserId(Long rentUserId){
-        return productRepository.findAllByRentUserId(rentUserId);
+    public Optional<List<Product>> findByRentUserId(Long rentUserId){
+        return productRepository.findByRentUserId(rentUserId);
     }
 
     public Optional<List<Product>> findAll(){

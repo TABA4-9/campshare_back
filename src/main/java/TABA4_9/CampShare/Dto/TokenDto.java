@@ -11,10 +11,13 @@ import lombok.Setter;
 public class TokenDto {
     @JsonProperty("grant_type")
     private String grantType;
+
     @JsonProperty("access_token")
     private String accessToken;
+
     @JsonProperty("refresh_token")
     private String refreshToken;
+
     @JsonProperty("access_token_expires_in")
     private Long accessTokenExpiresIn;
 }

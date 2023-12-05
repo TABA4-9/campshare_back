@@ -1,10 +1,10 @@
 package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.CEmailLoginFailedException;
-import TABA4_9.CampShare.Entity.Account;
-import TABA4_9.CampShare.Entity.RefreshToken;
 import TABA4_9.CampShare.Dto.SignupRequestDto;
 import TABA4_9.CampShare.Dto.TokenDto;
+import TABA4_9.CampShare.Entity.Account;
+import TABA4_9.CampShare.Entity.RefreshToken;
 import TABA4_9.CampShare.JwtProvider;
 import TABA4_9.CampShare.Repository.AccountRepository;
 import TABA4_9.CampShare.Repository.RefreshTokenRepository;
@@ -40,7 +40,6 @@ public class SecurityService {
 
     /* 로그인 된 사용자에게 토큰 발급 : refresh token 은 DB 에 저장 */
     public TokenDto login(String email) {
-        /* 에러 발생 */
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(CEmailLoginFailedException::new);
 
@@ -50,7 +49,7 @@ public class SecurityService {
         // RefreshToken 만 DB에 저장
         // signup 시에도 저장하고, 로그인시에도 저장하므로 존재하는 토큰을 찾기 위해 key 값이 필요
         RefreshToken refreshToken = RefreshToken.builder()
-                .key(account.getId())
+                .key(account.getAccountId())
                 .token(tokenDto.getRefreshToken())
                 .build();
         tokenRepository.save(refreshToken);

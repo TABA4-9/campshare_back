@@ -1,11 +1,12 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Dto.*;
+import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
+import TABA4_9.CampShare.Service.DanawaService;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
-import TABA4_9.CampShare.Service.SecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,12 +24,18 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static java.lang.String.valueOf;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
 public class ProductController {
+
+    private final DanawaService danawaService;
     private final ProductService productService;
     private final ProductImageService productImageService;
+
+    private final SearchLogController searchLogController;
 
     /*
         인기 상품 3개 return 해주는 getThreeProduct()
@@ -36,9 +43,9 @@ public class ProductController {
     @GetMapping("/product/data/main")
     public List<Product> getThreeProduct(){
 
-        Optional<Product> product1 = productService.findById(1L);
-        Optional<Product> product2 = productService.findById(27L);
-        Optional<Product> product3 = productService.findById(28L);
+        Optional<Product> product1 = productService.findById(2L);
+        Optional<Product> product2 = productService.findById(3L);
+        Optional<Product> product3 = productService.findById(6L);
 
         List<Product> product = new ArrayList<>(3);
 
@@ -65,8 +72,32 @@ public class ProductController {
     @ExceptionHandler
     @PostMapping("/post/nextPage")
     protected String postProduct1(@RequestBody Product product, Exception e){
-        return minPrice(product);
+        Long headCount = Long.parseLong(product.getHeadcount());
+        double returnPrice = recommendPrice(danawaService.findByPeople(headCount));
+        if (returnPrice == 0L) {
+            return "추천 가격 정보가 없습니다";
+        } else {
+            double usingYear = (Long.parseLong(product.getUsingYear().substring(0,1)));
+            String resultRecommendPrice = String.format("%.2f",(usingYear / 10) * returnPrice * 0.05);
+            return resultRecommendPrice;
+        }
     }
+
+    public Long recommendPrice(Optional<List<Danawa>> danawas) {
+        Long avg = 0L;
+        Long count = 0L;
+        for (Danawa danawa : danawas.orElseThrow()) {
+            avg = avg + danawa.getPrice();
+            count++;
+        }
+        if (count == 0) {
+            return 0L;
+        } else {
+            return (avg / count);
+        }
+    }
+
+
 
     @Value("${image.upload.path}") // application.properties의 변수
     private String uploadPath;
@@ -80,7 +111,8 @@ public class ProductController {
 
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
-        //product.setPostUserId(SecurityService.getCurrentAccountId());
+        product.setIsRented(false);
+        //게시자 id 등록하기 product.setPostUserId();
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
         log.debug("Upload Files={}", (Object) uploadFiles);
@@ -108,21 +140,22 @@ public class ProductController {
             String uuid = UUID.randomUUID().toString();
 
             //저장할 파일 이름
-            String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + fileName;
+            String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "~" + fileName;
             log.debug("Save Name={}", saveName);
 
             Path savePath = Paths.get(saveName);
             log.debug("Save Path={}", savePath);
 
             productImage.setUuid(uuid);
-            productImage.setImagePath(String.valueOf(savePath));
-            product.setImagePath(String.valueOf(savePath));
+            productImage.setImagePath(valueOf(savePath));
+            product.setImagePath(valueOf(savePath));
 
             log.debug("ProductImage : {}", productImage);
 
             try {
                 log.debug("Tibero 저장 시도");
                 productService.save(product);
+                productImage.setProduct(product);
                 productImageService.save(productImage);
                 log.debug("Tibero 저장 성공");
 
@@ -188,21 +221,26 @@ public class ProductController {
     /*
         개별 상품 페이지
     */
-    @PostMapping("/detail/{id}")
-    public Optional<Product> detailProduct(@PathVariable("id") Long productId, @RequestBody DetailDto detailDto) {
-        log.debug("productId = {}, userId = {}, detailPageLog = {}", productId, detailDto.getUserId(), detailDto.getDetailPageLog());
+    @PostMapping("/detail/{itemId}")
+    public Optional<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) {
+//        log.debug("productId = {}, userId = {}, detailPageLog = {}", itemId, detailDto.getUserId(), detailDto.getDetailPageLog());
 
-        Optional<Product> product = productService.findById(productId);
+        Optional<Product> product = productService.findById(itemId);
+        searchLogController.saveLog(product, detailDto.getUserId(), detailDto.getDetailPageLog());
 
         return Optional.of(product.orElseThrow());
     }
 
-    /* function */
-    String minPrice(Product product){
+
+
+
+    String recommendPrice(Product product) {
+
+        product.getPrice();
         return "서비스 준비 중";
     }
 
-    String setTimeStamp() {
+    public static String setTimeStamp() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
