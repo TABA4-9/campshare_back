@@ -1,8 +1,10 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Dto.*;
+import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
+import TABA4_9.CampShare.Service.DanawaService;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static java.lang.String.valueOf;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
 public class ProductController {
+
+    private final DanawaService danawaService;
     private final ProductService productService;
     private final ProductImageService productImageService;
 
@@ -66,8 +72,32 @@ public class ProductController {
     @ExceptionHandler
     @PostMapping("/post/nextPage")
     protected String postProduct1(@RequestBody Product product, Exception e){
-        return recommendPrice(product);
+        Long headCount = Long.parseLong(product.getHeadcount());
+        double returnPrice = recommendPrice(danawaService.findByPeople(headCount));
+        if (returnPrice == 0L) {
+            return "추천 가격 정보가 없습니다";
+        } else {
+            double usingYear = (Long.parseLong(product.getUsingYear().substring(0,1)));
+            String resultRecommendPrice = String.format("%.2f",(usingYear / 10) * returnPrice * 0.05);
+            return resultRecommendPrice;
+        }
     }
+
+    public Long recommendPrice(Optional<List<Danawa>> danawas) {
+        Long avg = 0L;
+        Long count = 0L;
+        for (Danawa danawa : danawas.orElseThrow()) {
+            avg = avg + danawa.getPrice();
+            count++;
+        }
+        if (count == 0) {
+            return 0L;
+        } else {
+            return (avg / count);
+        }
+    }
+
+
 
     @Value("${image.upload.path}") // application.properties의 변수
     private String uploadPath;
@@ -117,8 +147,8 @@ public class ProductController {
             log.debug("Save Path={}", savePath);
 
             productImage.setUuid(uuid);
-            productImage.setImagePath(String.valueOf(savePath));
-            product.setImagePath(String.valueOf(savePath));
+            productImage.setImagePath(valueOf(savePath));
+            product.setImagePath(valueOf(savePath));
 
             log.debug("ProductImage : {}", productImage);
 
