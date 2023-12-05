@@ -108,7 +108,7 @@ public class ProductController {
             String uuid = UUID.randomUUID().toString();
 
             //저장할 파일 이름
-            String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + fileName;
+            String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "~" + fileName;
             log.debug("Save Name={}", saveName);
 
             Path savePath = Paths.get(saveName);
@@ -123,6 +123,7 @@ public class ProductController {
             try {
                 log.debug("Tibero 저장 시도");
                 productService.save(product);
+                productImage.setProduct(product);
                 productImageService.save(productImage);
                 log.debug("Tibero 저장 성공");
 

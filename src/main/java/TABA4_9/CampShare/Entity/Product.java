@@ -12,7 +12,7 @@ import javax.persistence.Id;
 @Entity
 @Getter
 @Setter
-public class Product {
+public class Product{
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     private Long id;
