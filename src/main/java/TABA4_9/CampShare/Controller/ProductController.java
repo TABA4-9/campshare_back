@@ -29,6 +29,8 @@ public class ProductController {
     private final ProductService productService;
     private final ProductImageService productImageService;
 
+    private final SearchLogController searchLogController;
+
     /*
         인기 상품 3개 return 해주는 getThreeProduct()
     */
@@ -64,7 +66,7 @@ public class ProductController {
     @ExceptionHandler
     @PostMapping("/post/nextPage")
     protected String postProduct1(@RequestBody Product product, Exception e){
-        return minPrice(product);
+        return recommendPrice(product);
     }
 
     @Value("${image.upload.path}") // application.properties의 변수
@@ -189,21 +191,26 @@ public class ProductController {
     /*
         개별 상품 페이지
     */
-    @PostMapping("/detail/{id}")
-    public Optional<Product> detailProduct(@PathVariable("id") Long productId, @RequestBody DetailDto detailDto) {
-        log.debug("productId = {}, userId = {}, detailPageLog = {}", productId, detailDto.getUserId(), detailDto.getDetailPageLog());
+    @PostMapping("/detail/{itemId}")
+    public Optional<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) {
+//        log.debug("productId = {}, userId = {}, detailPageLog = {}", itemId, detailDto.getUserId(), detailDto.getDetailPageLog());
 
-        Optional<Product> product = productService.findById(productId);
+        Optional<Product> product = productService.findById(itemId);
+        searchLogController.saveLog(product, detailDto.getUserId(), detailDto.getDetailPageLog());
 
         return Optional.of(product.orElseThrow());
     }
 
-    /* function */
-    String minPrice(Product product){
+
+
+
+    String recommendPrice(Product product) {
+
+        product.getPrice();
         return "서비스 준비 중";
     }
 
-    String setTimeStamp() {
+    public static String setTimeStamp() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
