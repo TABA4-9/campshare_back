@@ -23,7 +23,7 @@ public class AuthController {
     public ResponseEntity<LoginResponseDto> kakaoLogin(@Valid HttpServletRequest request) {
 
         String code = request.getParameter("code");
-        String kakaoAccessToken = authService.getKakaoAccessToken(code).getAccess_token();
+        String kakaoAccessToken = authService.getKakaoAccessToken(code).getAccessToken();
         return authService.kakaoLogin(kakaoAccessToken);
     }
 

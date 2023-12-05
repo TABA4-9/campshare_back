@@ -5,7 +5,6 @@ import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
-import TABA4_9.CampShare.Service.SecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,9 +35,9 @@ public class ProductController {
     @GetMapping("/product/data/main")
     public List<Product> getThreeProduct(){
 
-        Optional<Product> product1 = productService.findById(1L);
-        Optional<Product> product2 = productService.findById(27L);
-        Optional<Product> product3 = productService.findById(28L);
+        Optional<Product> product1 = productService.findById(2L);
+        Optional<Product> product2 = productService.findById(3L);
+        Optional<Product> product3 = productService.findById(6L);
 
         List<Product> product = new ArrayList<>(3);
 
@@ -80,7 +79,8 @@ public class ProductController {
 
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
-        //product.setPostUserId(SecurityService.getCurrentAccountId());
+        product.setIsRented(false);
+        //게시자 id 등록하기 product.setPostUserId();
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
         log.debug("Upload Files={}", (Object) uploadFiles);
