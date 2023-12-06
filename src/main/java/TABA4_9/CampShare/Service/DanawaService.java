@@ -1,6 +1,6 @@
 package TABA4_9.CampShare.Service;
 
-import TABA4_9.CampShare.Dto.DanawaDto;
+import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Repository.DanawaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ public class DanawaService {
 
     private final DanawaRepository danawaRepository;
 
-    public Optional<List<DanawaDto>> findByPeople(Long people){
+    public Optional<List<Danawa>> findByPeople(Long people){
         return danawaRepository.findByPeople(people);
     }
 

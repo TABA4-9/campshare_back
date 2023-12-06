@@ -1,6 +1,7 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Dto.*;
+import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Entity.ViewLog;
@@ -63,11 +64,13 @@ public class ProductController {
     @ExceptionHandler
     @PostMapping("/post/nextPage")
     protected String postProduct1(@RequestBody Product product, Exception e){
-        Long headCount = Long.parseLong(product.getHeadcount());
+        Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
         double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
+
         if (avgPrice == 0L) {
             return "추천 가격 정보가 없습니다";
-        } else {
+        }
+        else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0,1)));
             return String.format("%.2f",(usingYear / 10) * avgPrice * 0.05); //감가상각 수식 적용
         }
@@ -212,11 +215,11 @@ public class ProductController {
 
 /* functions */
 
-    Long avgPrice(Optional<List<DanawaDto>> danawaDtos) {
+    Long avgPrice(Optional<List<Danawa>> danawaList) {
         Long avg = 0L;
         Long count = 0L;
-        for (DanawaDto danawaDto : danawaDtos.orElseThrow()) {
-            avg += danawaDto.getPrice();
+        for (Danawa danawa : danawaList.orElseThrow()) {
+            avg += danawa.getPrice();
             count++;
         }
         if (count == 0) {
