@@ -65,6 +65,7 @@ public class ProductController {
     @PostMapping("/post/nextPage")
     protected String postProduct1(@RequestBody Product product, Exception e){
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
+//        System.out.println("headCount = " + headCount);
         double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
 
         if (avgPrice == 0L) {
@@ -219,6 +220,7 @@ public class ProductController {
         Long avg = 0L;
         Long count = 0L;
         for (Danawa danawa : danawaList.orElseThrow()) {
+            System.out.println(danawa.getName() + " / " + danawa.getPeople() + " / " + danawa.getPrice());
             avg += danawa.getPrice();
             count++;
         }
