@@ -1,12 +1,13 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Dto.*;
-import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
+import TABA4_9.CampShare.Entity.ViewLog;
 import TABA4_9.CampShare.Service.DanawaService;
 import TABA4_9.CampShare.Service.ProductImageService;
 import TABA4_9.CampShare.Service.ProductService;
+import TABA4_9.CampShare.Service.ViewLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,25 +35,17 @@ public class ProductController {
     private final DanawaService danawaService;
     private final ProductService productService;
     private final ProductImageService productImageService;
-
-    private final SearchLogController searchLogController;
+    private final ViewLogService viewLogService;
 
     /*
         인기 상품 3개 return 해주는 getThreeProduct()
     */
     @GetMapping("/product/data/main")
     public List<Product> getThreeProduct(){
-
-        Optional<Product> product1 = productService.findById(2L);
-        Optional<Product> product2 = productService.findById(3L);
-        Optional<Product> product3 = productService.findById(6L);
-
         List<Product> product = new ArrayList<>(3);
-
-        product.add(product1.orElseThrow());
-        product.add(product2.orElseThrow());
-        product.add(product3.orElseThrow());
-
+        product.add(productService.findById(2L).orElseThrow());
+        product.add(productService.findById(3L).orElseThrow());
+        product.add(productService.findById(4L).orElseThrow());
         return product;
     }
 
@@ -61,9 +54,7 @@ public class ProductController {
     */
     @GetMapping("/product/data/category")
     public List<Product> getAllProduct(){
-        List<Product> productList = productService.findAll().orElseThrow();
-        log.debug("Product List : {}", productList);
-        return productList;
+        return productService.findAll().orElseThrow();
     }
     
     /*
@@ -73,31 +64,14 @@ public class ProductController {
     @PostMapping("/post/nextPage")
     protected String postProduct1(@RequestBody Product product, Exception e){
         Long headCount = Long.parseLong(product.getHeadcount());
-        double returnPrice = recommendPrice(danawaService.findByPeople(headCount));
-        if (returnPrice == 0L) {
+        double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
+        if (avgPrice == 0L) {
             return "추천 가격 정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0,1)));
-            String resultRecommendPrice = String.format("%.2f",(usingYear / 10) * returnPrice * 0.05);
-            return resultRecommendPrice;
+            return String.format("%.2f",(usingYear / 10) * avgPrice * 0.05); //감가상각 수식 적용
         }
-    }
-
-    public Long recommendPrice(Optional<List<Danawa>> danawas) {
-        Long avg = 0L;
-        Long count = 0L;
-        for (Danawa danawa : danawas.orElseThrow()) {
-            avg = avg + danawa.getPrice();
-            count++;
-        }
-        if (count == 0) {
-            return 0L;
-        } else {
-            return (avg / count);
-        }
-    }
-
-
+    }//endNextPage
 
     @Value("${image.upload.path}") // application.properties의 변수
     private String uploadPath;
@@ -112,7 +86,8 @@ public class ProductController {
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
         product.setIsRented(false);
-        //게시자 id 등록하기 product.setPostUserId();
+        //todo 게시자 id 등록하기
+        //product.setPostUserId();
         ProductImage productImage = new ProductImage();
         List<UploadResultDto> resultDtoList = new ArrayList<>();
         log.debug("Upload Files={}", (Object) uploadFiles);
@@ -158,8 +133,7 @@ public class ProductController {
                 productImage.setProduct(product);
                 productImageService.save(productImage);
                 log.debug("Tibero 저장 성공");
-
-                uploadFile.transferTo(savePath);// 실제 이미지 저장
+                uploadFile.transferTo(savePath);// 로컬에 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
 
                 log.debug("ResultDtoList (in try):{}", resultDtoList);
@@ -169,7 +143,7 @@ public class ProductController {
             }
         }//endFor
         return new ResponseEntity<>(HttpStatus.OK);
-    }//endMethod
+    }//endSubmit
 
     /*
         상품 정보 수정
@@ -185,7 +159,6 @@ public class ProductController {
             log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
             updateDto.setUpdateSuccess(true);
             updateDto.setUpdateProduct(updatedProduct);
-
         }
 
         catch(Exception e){
@@ -194,7 +167,7 @@ public class ProductController {
         }
 
         return updateDto;
-    }
+    }//endUpdate
 
     /*
         상품 정보 삭제
@@ -216,31 +189,44 @@ public class ProductController {
         }
 
         return deleteDto;
-    }
+    }//endDelete
     
     /*
         개별 상품 페이지
     */
     @PostMapping("/detail/{itemId}")
-    public Optional<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) {
-//        log.debug("productId = {}, userId = {}, detailPageLog = {}", itemId, detailDto.getUserId(), detailDto.getDetailPageLog());
+    public Product detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) {
+        Product product = productService.findById(itemId).orElseThrow();
 
-        Optional<Product> product = productService.findById(itemId);
-        searchLogController.saveLog(product, detailDto.getUserId(), detailDto.getDetailPageLog());
+        /* 로그 기록 */
+        ViewLog viewLog = new ViewLog();
+        viewLog.setItemId(product.getId());
+        viewLog.setUserId(detailDto.getUserId());
+        viewLog.setTimeStamp(detailDto.getTimeStamp());
+        viewLogService.save(viewLog);
 
-        return Optional.of(product.orElseThrow());
+        /* 상품 정보 반환 */
+        return product;
     }
 
 
+/* functions */
 
-
-    String recommendPrice(Product product) {
-
-        product.getPrice();
-        return "서비스 준비 중";
+    Long avgPrice(Optional<List<DanawaDto>> danawaDtos) {
+        Long avg = 0L;
+        Long count = 0L;
+        for (DanawaDto danawaDto : danawaDtos.orElseThrow()) {
+            avg += danawaDto.getPrice();
+            count++;
+        }
+        if (count == 0) {
+            return 0L;
+        } else {
+            return (avg / count);
+        }
     }
 
-    public static String setTimeStamp() {
+    String setTimeStamp() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
