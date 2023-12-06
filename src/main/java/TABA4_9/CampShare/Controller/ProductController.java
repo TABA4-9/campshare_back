@@ -5,15 +5,14 @@ import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Entity.ViewLog;
-import TABA4_9.CampShare.Service.DanawaService;
-import TABA4_9.CampShare.Service.ProductImageService;
-import TABA4_9.CampShare.Service.ProductService;
-import TABA4_9.CampShare.Service.ViewLogService;
+import TABA4_9.CampShare.Service.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,11 +37,14 @@ public class ProductController {
     private final ProductImageService productImageService;
     private final ViewLogService viewLogService;
 
+    private final FlaskService flaskService;
+
     /*
         인기 상품 3개 return 해주는 getThreeProduct()
     */
     @GetMapping("/product/data/main")
-    public List<Product> getThreeProduct(){
+
+    public List<Product> getThreeProduct() {
         List<Product> product = new ArrayList<>(3);
         product.add(productService.findById(2L).orElseThrow());
         product.add(productService.findById(3L).orElseThrow());
@@ -54,37 +56,36 @@ public class ProductController {
         모든 상품 정보를 return 해주는 getAllProduct()
     */
     @GetMapping("/product/data/category")
-    public List<Product> getAllProduct(){
+    public List<Product> getAllProduct() {
         return productService.findAll().orElseThrow();
     }
-    
+
     /*
         상품 업로드 - 1페이지    
     */
     @ExceptionHandler
     @PostMapping("/post/nextPage")
-    protected String postProduct1(@RequestBody Product product, Exception e){
+    protected String postProduct1(@RequestBody Product product ,Exception e) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
 //        System.out.println("headCount = " + headCount);
         double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
 
         if (avgPrice == 0L) {
             return "추천 가격 정보가 없습니다";
-        }
-        else {
-            double usingYear = (Long.parseLong(product.getUsingYear().substring(0,1)));
-            return String.format("%.2f",(usingYear / 10) * avgPrice * 0.05); //감가상각 수식 적용
+        } else {
+            double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
+            return String.format("%.2f", (usingYear / 10) * avgPrice * 0.05); //감가상각 수식 적용
         }
     }//endNextPage
 
     @Value("${image.upload.path}") // application.properties의 변수
     private String uploadPath;
-    
+
     /*
         상품 업로드 - 2페이지
     */
     @PostMapping("/post/submit")
-    public ResponseEntity<Product> postProduct2(@ModelAttribute PostProductDto postProductDto){
+    public ResponseEntity<Product> postProduct2(@ModelAttribute PostProductDto postProductDto) {
         MultipartFile[] uploadFiles = postProductDto.getImage();
 
         Product product = new Product(postProductDto);
@@ -153,19 +154,17 @@ public class ProductController {
         상품 정보 수정
     */
     @PutMapping("/product/update")
-    public UpdateDto updateProduct(@RequestBody Product updatedProduct){
+    public UpdateDto updateProduct(@RequestBody Product updatedProduct) {
 
         UpdateDto updateDto = new UpdateDto();
 
-        try{
+        try {
             log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
             productService.save(updatedProduct);
             log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
             updateDto.setUpdateSuccess(true);
             updateDto.setUpdateProduct(updatedProduct);
-        }
-
-        catch(Exception e){
+        } catch (Exception e) {
             updateDto.setUpdateSuccess(false);
             updateDto.setUpdateProduct(null);
         }
@@ -177,30 +176,43 @@ public class ProductController {
         상품 정보 삭제
     */
     @DeleteMapping("/product/delete")
-    public DeleteDto deleteProduct(@RequestParam Long productId){
+    public DeleteDto deleteProduct(@RequestParam Long productId) {
 
         DeleteDto deleteDto = new DeleteDto();
 
-        try{
+        try {
             productService.delete(productService.findById(productId).orElseThrow());
             deleteDto.setDeleteSuccess(true);
             deleteDto.setProductId(productId);
-        }
-
-        catch(Exception e){
+        } catch (Exception e) {
             deleteDto.setDeleteSuccess(false);
             deleteDto.setProductId(productId);
         }
 
         return deleteDto;
     }//endDelete
-    
+
     /*
         개별 상품 페이지
     */
     @PostMapping("/detail/{itemId}")
-    public Product detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) {
+    public List<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) throws JsonProcessingException {
+        List<Product> showProducts = new ArrayList<>();
         Product product = productService.findById(itemId).orElseThrow();
+
+        showProducts.add(product);
+
+        FlaskTestDto flaskTestDto = new FlaskTestDto();
+        flaskTestDto.setId(product.getId());
+        flaskTestDto.setName(product.getName());
+
+
+        List<Product> recommendProducts = sendToFlask(flaskTestDto);
+
+        showProducts.add(recommendProducts.get(0));
+        showProducts.add(recommendProducts.get(1));
+        showProducts.add(recommendProducts.get(2));
+
 
         /* 로그 기록 */
         ViewLog viewLog = new ViewLog();
@@ -209,18 +221,20 @@ public class ProductController {
         viewLog.setTimeStamp(detailDto.getTimeStamp());
         viewLogService.save(viewLog);
 
+
+
         /* 상품 정보 반환 */
-        return product;
+        return showProducts;
     }
 
 
-/* functions */
+    /* functions */
 
     Long avgPrice(Optional<List<Danawa>> danawaList) {
         Long avg = 0L;
         Long count = 0L;
         for (Danawa danawa : danawaList.orElseThrow()) {
-            System.out.println(danawa.getName() + " / " + danawa.getPeople() + " / " + danawa.getPrice());
+//            System.out.println(danawa.getName() + " / " + danawa.getPeople() + " / " + danawa.getPrice());
             avg += danawa.getPrice();
             count++;
         }
@@ -246,10 +260,25 @@ public class ProductController {
         // make folder
         File uploadPatheFolder = new File(uploadPath, folderPath);
 
-        if(!uploadPatheFolder.exists()){
+        if (!uploadPatheFolder.exists()) {
             uploadPatheFolder.mkdirs();
         }
         return folderPath;
+    }
+
+    public List<Product> sendToFlask(FlaskTestDto flaskTestDto) throws JsonProcessingException {
+        RecommendItemDto recommendItemDto = flaskService.sendToFlask(flaskTestDto);
+
+        Long item1 = recommendItemDto.getRecommendItemId1();
+        Long item2 = recommendItemDto.getRecommendItemId2();
+        Long item3 = recommendItemDto.getRecommendItemId3();
+
+        List<Product> products = new ArrayList<>();
+
+        products.add(productService.findById(item1).get());
+        products.add(productService.findById(item2).get());
+        products.add(productService.findById(item3).get());
+        return products;
     }
 
 }//endClass
