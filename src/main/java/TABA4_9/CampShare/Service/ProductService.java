@@ -31,6 +31,7 @@ public class ProductService {
     public Optional<List<Product>> findAll(){
         return Optional.of(productRepository.findAll());
     }
+
     public void delete(Product product){
         productRepository.deleteById(product.getId());
     }
