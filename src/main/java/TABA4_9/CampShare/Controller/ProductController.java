@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,14 +35,12 @@ public class ProductController {
     private final ProductService productService;
     private final ProductImageService productImageService;
     private final ViewLogService viewLogService;
-
     private final FlaskService flaskService;
 
     /*
         인기 상품 3개 return 해주는 getThreeProduct()
     */
     @GetMapping("/product/data/main")
-
     public List<Product> getThreeProduct() {
         List<Product> product = new ArrayList<>(3);
         product.add(productService.findById(2L).orElseThrow());
@@ -60,12 +57,27 @@ public class ProductController {
         return productService.findAll().orElseThrow();
     }
 
+    @PostMapping("/product/matching")
+    public void matching(MatchingDto matchingDto){
+        Product product = productService.findById(matchingDto.getProductId()).orElseThrow();
+        product.setIsRented(true);
+        product.setRentUserId(matchingDto.getRentUserId());
+        try{
+            productService.save(product);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
+    }//endMatching
+
+
     /*
         상품 업로드 - 1페이지    
     */
     @ExceptionHandler
     @PostMapping("/post/nextPage")
-    protected String postProduct1(@RequestBody Product product ,Exception e) {
+    public String postProduct1(@RequestBody Product product ,Exception e) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
 //        System.out.println("headCount = " + headCount);
         double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
@@ -184,7 +196,8 @@ public class ProductController {
             productService.delete(productService.findById(productId).orElseThrow());
             deleteDto.setDeleteSuccess(true);
             deleteDto.setProductId(productId);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             deleteDto.setDeleteSuccess(false);
             deleteDto.setProductId(productId);
         }
@@ -200,20 +213,6 @@ public class ProductController {
         List<Product> showProducts = new ArrayList<>();
         Product product = productService.findById(itemId).orElseThrow();
 
-        showProducts.add(product);
-
-        FlaskTestDto flaskTestDto = new FlaskTestDto();
-        flaskTestDto.setId(product.getId());
-        flaskTestDto.setName(product.getName());
-
-
-        List<Product> recommendProducts = sendToFlask(flaskTestDto);
-
-        showProducts.add(recommendProducts.get(0));
-        showProducts.add(recommendProducts.get(1));
-        showProducts.add(recommendProducts.get(2));
-
-
         /* 로그 기록 */
         ViewLog viewLog = new ViewLog();
         viewLog.setItemId(product.getId());
@@ -221,9 +220,18 @@ public class ProductController {
         viewLog.setTimeStamp(detailDto.getTimeStamp());
         viewLogService.save(viewLog);
 
+        /* Flask 통신 */
+        FlaskTestDto flaskTestDto = new FlaskTestDto();
+        flaskTestDto.setId(product.getId());
+        flaskTestDto.setName(product.getName());
 
+        List<Product> recommendProducts = sendToFlask(flaskTestDto);
 
-        /* 상품 정보 반환 */
+        showProducts.add(recommendProducts.get(0));
+        showProducts.add(recommendProducts.get(1));
+        showProducts.add(recommendProducts.get(2));
+
+        /* 추천 상품 정보 반환 */
         return showProducts;
     }
 
@@ -234,7 +242,6 @@ public class ProductController {
         Long avg = 0L;
         Long count = 0L;
         for (Danawa danawa : danawaList.orElseThrow()) {
-//            System.out.println(danawa.getName() + " / " + danawa.getPeople() + " / " + danawa.getPrice());
             avg += danawa.getPrice();
             count++;
         }
@@ -275,9 +282,9 @@ public class ProductController {
 
         List<Product> products = new ArrayList<>();
 
-        products.add(productService.findById(item1).get());
-        products.add(productService.findById(item2).get());
-        products.add(productService.findById(item3).get());
+        products.add(productService.findById(item1).orElseThrow());
+        products.add(productService.findById(item2).orElseThrow());
+        products.add(productService.findById(item3).orElseThrow());
         return products;
     }
 
