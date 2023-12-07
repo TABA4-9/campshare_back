@@ -217,7 +217,7 @@ public class ProductController {
         ViewLog viewLog = new ViewLog();
         viewLog.setItemId(product.getId());
         viewLog.setUserId(detailDto.getUserId());
-        viewLog.setTimeStamp(detailDto.getTimeStamp());
+        viewLog.setTimeStamp(detailDto.getDetailPageLog());
         viewLogService.save(viewLog);
 
         /* Flask 통신 */
@@ -233,6 +233,11 @@ public class ProductController {
 
         /* 추천 상품 정보 반환 */
         return showProducts;
+    }
+
+    @GetMapping("/product/data/search")
+    public List<Product> searchProduct(@RequestParam String searchInput){
+        return productService.findByNameLike(searchInput).orElseThrow();
     }
 
 

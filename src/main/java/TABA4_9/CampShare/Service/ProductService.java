@@ -25,7 +25,9 @@ public class ProductService {
     public Optional<List<Product>> findByRentUserId(Long rentUserId){
         return productRepository.findByRentUserId(rentUserId);
     }
-
+    public Optional<List<Product>> findByNameLike(String name){
+        return productRepository.findByNameLike("%"+name+"%");
+    }
     public Optional<List<Product>> findAll(){
         return Optional.of(productRepository.findAll());
     }
