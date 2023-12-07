@@ -220,16 +220,16 @@ public class ProductController {
         viewLog.setTimeStamp(detailDto.getDetailPageLog());
         viewLogService.save(viewLog);
 
-        /* Flask 통신 */
-        FlaskTestDto flaskTestDto = new FlaskTestDto();
-        flaskTestDto.setId(product.getId());
-        flaskTestDto.setName(product.getName());
-
-        List<Product> recommendProducts = sendToFlask(flaskTestDto);
-
-        showProducts.add(recommendProducts.get(0));
-        showProducts.add(recommendProducts.get(1));
-        showProducts.add(recommendProducts.get(2));
+//        /* Flask 통신 */
+//        FlaskTestDto flaskTestDto = new FlaskTestDto();
+//        flaskTestDto.setId(product.getId());
+//        flaskTestDto.setName(product.getName());
+//
+//        List<Product> recommendProducts = sendToFlask(flaskTestDto);
+//
+//        showProducts.add(recommendProducts.get(0));
+//        showProducts.add(recommendProducts.get(1));
+//        showProducts.add(recommendProducts.get(2));
 
         /* 추천 상품 정보 반환 */
         return showProducts;
@@ -278,19 +278,19 @@ public class ProductController {
         return folderPath;
     }
 
-    public List<Product> sendToFlask(FlaskTestDto flaskTestDto) throws JsonProcessingException {
-        RecommendItemDto recommendItemDto = flaskService.sendToFlask(flaskTestDto);
-
-        Long item1 = recommendItemDto.getRecommendItemId1();
-        Long item2 = recommendItemDto.getRecommendItemId2();
-        Long item3 = recommendItemDto.getRecommendItemId3();
-
-        List<Product> products = new ArrayList<>();
-
-        products.add(productService.findById(item1).orElseThrow());
-        products.add(productService.findById(item2).orElseThrow());
-        products.add(productService.findById(item3).orElseThrow());
-        return products;
-    }
+//    public List<Product> sendToFlask(FlaskTestDto flaskTestDto) throws JsonProcessingException {
+//        RecommendItemDto recommendItemDto = flaskService.sendToFlask(flaskTestDto);
+//
+//        Long item1 = recommendItemDto.getRecommendItemId1();
+//        Long item2 = recommendItemDto.getRecommendItemId2();
+//        Long item3 = recommendItemDto.getRecommendItemId3();
+//
+//        List<Product> products = new ArrayList<>();
+//
+//        products.add(productService.findById(item1).orElseThrow());
+//        products.add(productService.findById(item2).orElseThrow());
+//        products.add(productService.findById(item3).orElseThrow());
+//        return products;
+//    }
 
 }//endClass
