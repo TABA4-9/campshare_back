@@ -1,5 +1,6 @@
 package TABA4_9.CampShare.Entity;
 
+import TABA4_9.CampShare.Dto.PostProductDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,23 +37,19 @@ public class Product{
 
     }
 
-    public Product(Product product){
-        id = product.getId();
-        name = product.getName();
-        startDate = product.getStartDate();
-        endDate = product.getEndDate();
-        category = product.getCategory();
-        headcount = product.getHeadcount();
-        explanation = product.getExplanation();
-        price = product.getPrice();
-        imagePath = product.getImagePath();
-        brand = product.getBrand();
-        usingYear = product.getUsingYear();
-        address = product.getAddress();
-        postUserId = product.getPostUserId();
-        isRented = product.getIsRented();
-        rentUserId = product.getRentUserId();
-        timestamp = product.getTimestamp();
+    public Product(PostProductDto postProductDto){
+        name = postProductDto.getName();
+        brand = postProductDto.getBrand();
+        category = postProductDto.getCategory();
+        usingYear = postProductDto.getUsingYear();
+        headcount = postProductDto.getHeadcount();
+        explanation = postProductDto.getExplanation();
+        price = postProductDto.getPrice();
+        address = postProductDto.getAddress();
+        startDate = postProductDto.getStartDate();
+        endDate = postProductDto.getEndDate();
+        postUserId = Long.valueOf(postProductDto.getPostUserId());
+        isRented = Boolean.valueOf(postProductDto.getIsRented());
     }
 
 }

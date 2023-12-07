@@ -8,8 +8,22 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.Serializable;
 
 @Getter @Setter
-public class PostProductDto extends Product implements Serializable {
-
+public class PostProductDto implements Serializable {
+    private String name;
+    private String startDate;
+    private String endDate;
+    private String category;
+    private String headcount;
+    private String explanation;
+    private String price;
+    private String imagePath;
+    private String brand;
+    private String usingYear;
+    private String address;
+    private String postUserId;
+    private String isRented;
+    private String rentUserId;
+    private String timestamp;
     private MultipartFile[] image;
 
 }

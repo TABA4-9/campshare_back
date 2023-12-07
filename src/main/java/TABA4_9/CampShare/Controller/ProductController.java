@@ -1,10 +1,8 @@
 package TABA4_9.CampShare.Controller;
 
 import TABA4_9.CampShare.Dto.*;
-import TABA4_9.CampShare.Entity.Danawa;
-import TABA4_9.CampShare.Entity.Product;
-import TABA4_9.CampShare.Entity.ProductImage;
-import TABA4_9.CampShare.Entity.ViewLog;
+import TABA4_9.CampShare.Entity.*;
+import TABA4_9.CampShare.Repository.AccountRepository;
 import TABA4_9.CampShare.Service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +34,7 @@ public class ProductController {
     private final ProductImageService productImageService;
     private final ViewLogService viewLogService;
     private final FlaskService flaskService;
+    private final AccountService accountService;
 
     /*
         인기 상품 3개 return 해주는 getThreeProduct()
@@ -43,9 +42,9 @@ public class ProductController {
     @GetMapping("/product/data/main")
     public List<Product> getThreeProduct() {
         List<Product> product = new ArrayList<>(3);
+        product.add(productService.findById(1L).orElseThrow());
         product.add(productService.findById(2L).orElseThrow());
         product.add(productService.findById(3L).orElseThrow());
-        product.add(productService.findById(4L).orElseThrow());
         return product;
     }
 
@@ -58,26 +57,31 @@ public class ProductController {
     }
 
     @PostMapping("/product/matching")
-    public void matching(MatchingDto matchingDto){
+    public List<Product> matching(@RequestBody MatchingDto matchingDto){
         Product product = productService.findById(matchingDto.getProductId()).orElseThrow();
         product.setIsRented(true);
         product.setRentUserId(matchingDto.getRentUserId());
+
+        Account dbAccount = accountService.findById(matchingDto.getRentUserId()).orElseThrow();
+        log.info("matching dbAccount: {}", dbAccount);
         try{
             productService.save(product);
+            List<Product> rentItem = productService.findByRentUserId(dbAccount.getId()).orElseThrow();
+            log.info("Updated rentItem: {}", rentItem);
+            return rentItem;
         }
         catch(Exception e){
             e.printStackTrace();
         }
-
+        return null;
     }//endMatching
 
 
     /*
         상품 업로드 - 1페이지    
     */
-    @ExceptionHandler
     @PostMapping("/post/nextPage")
-    public String postProduct1(@RequestBody Product product ,Exception e) {
+    public String postProduct1(@RequestBody Product product) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
 //        System.out.println("headCount = " + headCount);
         double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
@@ -86,7 +90,7 @@ public class ProductController {
             return "추천 가격 정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
-            return String.format("%.2f", (usingYear / 10) * avgPrice * 0.05); //감가상각 수식 적용
+            return String.format("%.0f", (usingYear / 10) * avgPrice * 0.02); //감가상각 수식 적용
         }
     }//endNextPage
 
@@ -102,7 +106,7 @@ public class ProductController {
 
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
-        product.setIsRented(false);
+
         //todo 게시자 id 등록하기
         //product.setPostUserId();
         ProductImage productImage = new ProductImage();
@@ -143,13 +147,12 @@ public class ProductController {
             product.setImagePath(valueOf(savePath));
 
             log.debug("ProductImage : {}", productImage);
-
+            log.info("Tibero 저장 시도");
             try {
-                log.debug("Tibero 저장 시도");
                 productService.save(product);
                 productImage.setProduct(product);
                 productImageService.save(productImage);
-                log.debug("Tibero 저장 성공");
+                log.info("Tibero 저장 성공");
                 uploadFile.transferTo(savePath);// 로컬에 이미지 저장
                 resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
 
@@ -165,7 +168,7 @@ public class ProductController {
     /*
         상품 정보 수정
     */
-    @PutMapping("/product/update")
+    @PostMapping("/product/update")
     public UpdateDto updateProduct(@RequestBody Product updatedProduct) {
 
         UpdateDto updateDto = new UpdateDto();
@@ -187,19 +190,16 @@ public class ProductController {
     /*
         상품 정보 삭제
     */
-    @DeleteMapping("/product/delete")
-    public DeleteDto deleteProduct(@RequestParam Long productId) {
-
-        DeleteDto deleteDto = new DeleteDto();
+    @PostMapping("/product/delete")
+    public DeleteDto deleteProduct(@RequestBody DeleteDto deleteDto) {
+        System.out.println("delete productId = " + deleteDto.getProductId());
 
         try {
-            productService.delete(productService.findById(productId).orElseThrow());
+            productService.delete(productService.findById(deleteDto.getProductId()).orElseThrow());
             deleteDto.setDeleteSuccess(true);
-            deleteDto.setProductId(productId);
         }
         catch (Exception e) {
             deleteDto.setDeleteSuccess(false);
-            deleteDto.setProductId(productId);
         }
 
         return deleteDto;

@@ -12,6 +12,6 @@ public class LoginResponseDto {
     private boolean loginSuccess;
     private Account account;
     private String kakaoAccessToken;
-    private List<Product> postedProducts;
-    private List<Product> rentedProducts;
+    private List<Product> lendItem;
+    private List<Product> rentItem;
 }
