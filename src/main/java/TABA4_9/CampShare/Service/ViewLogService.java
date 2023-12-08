@@ -13,8 +13,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ViewLogService {
     private final ViewLogRepository viewLogRepository;
-    public ViewLog save(ViewLog viewLog){
-        return viewLogRepository.save(viewLog);
+    public void save(ViewLog viewLog){
+        viewLogRepository.save(viewLog);
     }
     public Optional<ViewLog> findByUserId(Long id){
         return viewLogRepository.findByUserId(id);

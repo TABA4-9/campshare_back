@@ -24,7 +24,9 @@ public class Product{
     private String headcount;
     private String explanation;
     private String price;
-    private String imagePath;
+    private String imagePath1;
+    private String imagePath2;
+    private String imagePath3;
     private String brand;
     private String usingYear;
     private String address;
@@ -38,6 +40,7 @@ public class Product{
     }
 
     public Product(PostProductDto postProductDto){
+        id = postProductDto.getId();
         name = postProductDto.getName();
         brand = postProductDto.getBrand();
         category = postProductDto.getCategory();
