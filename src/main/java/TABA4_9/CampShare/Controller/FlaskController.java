@@ -22,9 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 public class FlaskController {
-    private final DanawaService danawaService;
     private final ProductService productService;
-    private final ProductImageService productImageService;
     private final ViewLogService viewLogService;
     private final FlaskService flaskService;
 

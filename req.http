@@ -1,0 +1,23 @@
+### /product/data/main
+GET http://localhost:8080/product/data/main
+
+### /product/data/category
+GET http://localhost:8080/product/data/category
+
+### /product/matching
+POST http://localhost:8080/product/matching
+
+### /post/nextPage
+POST http://localhost:8080/post/nextPage
+
+### /post/submit
+POST http://localhost:8080/post/submit
+
+### /product/update
+POST http://localhost:8080/product/update
+
+### /product/delete
+POST http://localhost:8080/product/delete
+
+### /product/data/search
+GET http://localhost:8080/product/data/search

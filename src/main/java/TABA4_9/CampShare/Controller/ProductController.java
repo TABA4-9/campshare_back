@@ -9,7 +9,6 @@ import TABA4_9.CampShare.Service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +42,7 @@ public class ProductController {
         productList.add(productService.findById(1L).orElseThrow());
         productList.add(productService.findById(2L).orElseThrow());
         productList.add(productService.findById(3L).orElseThrow());
-        imagePathSetting(productList, productDtoList);
+        productDtoList = imagePathSetting(productList, productDtoList);
 
         return productDtoList;
     }
@@ -91,21 +90,18 @@ public class ProductController {
         }
     }//endNextPage
 
-    @Value("${image.upload.path}") // application.properties의 변수
-    private String uploadPath;
-
     /*
         상품 업로드 - 2페이지
     */
     @PostMapping("/post/submit")
     public ResponseEntity<Product> postProduct2(@ModelAttribute PostProductDto postProductDto) throws IOException {
         MultipartFile[] uploadFiles = postProductDto.getImage();
+        List<String> imagePath = new ArrayList<>();
+
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
 
-        List<UploadResultDto> resultDtoList = new ArrayList<>();
         log.debug("Upload Files={}", (Object) uploadFiles);
-
         for (MultipartFile uploadFile : uploadFiles) {
             // 이미지 파일만 업로드 가능
 
@@ -115,14 +111,17 @@ public class ProductController {
             }
 
             String url = s3UploadService.saveFile(uploadFile);
-            product.setImagePath1(url);
+            imagePath.add(url);
+            log.debug("Return Url = {}", url);
 
-            log.info("Return Url = {}", url);
-
-            log.debug("Tibero 저장 시도");
-            productService.save(product);
-            log.debug("Tibero 저장 성공");
         }//endFor
+        if(imagePath.listIterator(0).hasNext()) product.setImagePath1(imagePath.get(0));
+        if(imagePath.listIterator(1).hasNext()) product.setImagePath2(imagePath.get(1));
+        if(imagePath.listIterator(2).hasNext()) product.setImagePath3(imagePath.get(2));
+
+        log.debug("Tibero 저장 시도");
+        productService.save(product);
+        log.debug("Tibero 저장 성공");
         return new ResponseEntity<>(HttpStatus.OK);
     }//endSubmit
 
@@ -194,20 +193,20 @@ public class ProductController {
 
 
     /* functions */
-    void imagePathSetting(List<Product> productList, List<ProductDto> productDtoList){
-        for(int i =0; i<productDtoList.size(); i++){
-            ProductDto productDto = new ProductDto(productList.get(i));
+    List<ProductDto> imagePathSetting(List<Product> productList, List<ProductDto> productDtoList){
+        for (Product product : productList) {
+            ProductDto productDto = new ProductDto(product);
             List<String> imagePathList = new ArrayList<>(3);
-            for(int j=0; j<3; j++){
+            for (int j = 0; j < 3; j++) {
                 String imagePath = productDto.getImagePath().get(j);
-                if(imagePath == null){
-                    continue;
+                if (imagePath != null) {
+                    imagePathList.add(imagePath);
                 }
-                imagePathList.add(imagePath);
             }//endForJ
             productDto.setImagePath(imagePathList);
             productDtoList.add(productDto);
         }//endForI
+        return productDtoList;
     }//endFunction
 
     Long avgPrice(Optional<List<Danawa>> danawaList) {
