@@ -9,14 +9,9 @@ import javax.persistence.Id;
 @Entity
 @Getter
 @Setter
-public class SearchLog {
+public class ViewLog {
     @Id
     private Long userId;
     private Long itemId;
     private String timeStamp;
-
-
-    public Long getId() {
-        return userId;
-    }
 }

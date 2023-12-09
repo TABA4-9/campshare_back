@@ -5,5 +5,5 @@ import lombok.Getter;
 @Getter
 public class DetailDto {
     private Long userId;
-    private String detailPageLog;
+    private String timeStamp;
 }
