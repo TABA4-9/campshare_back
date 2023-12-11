@@ -1,6 +1,7 @@
 package TABA4_9.CampShare.Dto.Product;
 
 import TABA4_9.CampShare.Entity.Product;
+import TABA4_9.CampShare.Service.AccountService;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +26,12 @@ public class ProductDto {
     private Boolean isRented;
     private Long rentUserId;
     private String timestamp;
+
+    private String postUserName;
+
+    private String postUserEmail;
+
+
 
     public ProductDto(){}
     public ProductDto(Product product){

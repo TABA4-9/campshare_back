@@ -54,9 +54,9 @@ public class FlaskService {
 
         log.info("6");
         //실제 Flask 서버랑 연결하기 위한 URL
-        String productUrl = "http://localhost:5000/test/product";
-        String logUrl = "http://localhost:5000/test/log";
-        String searchUrl = "http://localhost:5000/test/search";
+        String productUrl = "http://43.200.201.220:5000/test/product";
+        String logUrl = "http://43.200.201.220:5000/test/log";
+        String searchUrl = "http://43.200.201.220:5000/test/search";
 
         String product_json = restTemplate.postForObject(productUrl, productEntity, String.class);
         System.out.println("product_json = " + product_json);
