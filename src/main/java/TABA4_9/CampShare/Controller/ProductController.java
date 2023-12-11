@@ -105,10 +105,10 @@ public class ProductController {
         상품 업로드 - 2페이지
     */
     @PostMapping("/post/submit")
-    public ResponseEntity<Product> postProduct2(@ModelAttribute PostProductDto postProductDto) throws IOException {
+    public ResponseEntity<UploadResultDto> postProduct2(@ModelAttribute PostProductDto postProductDto) throws IOException {
         MultipartFile[] uploadFiles = postProductDto.getImage();
         List<String> imagePath = new ArrayList<>();
-
+        UploadResultDto uploadResultDto = new UploadResultDto();
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
 
@@ -124,7 +124,6 @@ public class ProductController {
             String url = s3UploadService.saveFile(uploadFile);
             imagePath.add(url);
             log.debug("Return Url = {}", url);
-
         }//endFor
 
         for(int i=0; imagePath.listIterator(i).hasNext(); i++){
@@ -138,7 +137,20 @@ public class ProductController {
         log.debug("Tibero 저장 시도");
         productService.save(product);
         log.debug("Tibero 저장 성공");
-        return new ResponseEntity<>(HttpStatus.OK);
+
+        //rentuserid로 account 찾기
+        Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
+        log.debug("matching dbAccount: {}", dbAccount);
+
+        //account의 lend product 찾기
+        List<Product> productList = productService.findByPostUserId(dbAccount.getId()).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+
+        uploadResultDto.setLendItem(productDtoList);
+        log.debug("Updated rentItem: {}", uploadResultDto.getLendItem());
+
+        return new ResponseEntity<>(uploadResultDto, HttpStatus.OK);
     }//endSubmit
 
     /*
@@ -146,7 +158,7 @@ public class ProductController {
     */
     @PostMapping("/product/update")
     public UpdateDto updateProduct(@ModelAttribute PostProductDto updatedProduct) {
-
+        
         UpdateDto updateDto = new UpdateDto();
 
         try {
