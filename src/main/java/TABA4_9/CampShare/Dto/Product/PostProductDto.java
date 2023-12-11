@@ -18,7 +18,7 @@ public class PostProductDto implements Serializable {
     private String explanation;
     private String price;
     private List<String> imagePath;
-    private String imageUrl;
+    private List<String> imageUrl;
     private String brand;
     private String usingYear;
     private String address;
