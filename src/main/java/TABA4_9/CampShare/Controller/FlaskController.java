@@ -26,7 +26,7 @@ public class FlaskController {
     private final ViewLogService viewLogService;
     private final FlaskService flaskService;
 
-    @PostMapping("flask/test/{itemId}")
+    @PostMapping("/detail/{itemId}")
     public List<Product> flaskTest(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) throws JsonProcessingException {
         List<Product> showProducts = new ArrayList<>();
         Product product = productService.findById(itemId).orElseThrow();
