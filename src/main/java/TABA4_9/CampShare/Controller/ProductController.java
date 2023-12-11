@@ -110,16 +110,18 @@ public class ProductController {
         product.setTimestamp(setTimeStamp());
 
         try {
-            for (MultipartFile uploadFile : uploadFiles) {
-                // 이미지 파일만 업로드 가능
-                if (!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")) {
-                    // 이미지가 아닌경우 403 Forbidden 반환
-                    return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-                }
-                String url = s3UploadService.saveFile(uploadFile);
-                imagePath.add(url);
-                log.debug("Return Url = {}", url);
-            }//endFor
+            if(uploadFiles != null){
+                for (MultipartFile uploadFile : uploadFiles) {
+                    // 이미지 파일만 업로드 가능
+                    if (!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")) {
+                        // 이미지가 아닌경우 403 Forbidden 반환
+                        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+                    }
+                    String url = s3UploadService.saveFile(uploadFile);
+                    imagePath.add(url);
+                    log.debug("Return Url = {}", url);
+                }//endFor
+            }
             int i, j;
             for(i=0; imageUrl.listIterator(i).hasNext(); i++){
                 switch (i){
