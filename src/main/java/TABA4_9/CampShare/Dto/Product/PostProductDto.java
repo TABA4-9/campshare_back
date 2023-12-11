@@ -1,12 +1,11 @@
 package TABA4_9.CampShare.Dto.Product;
 
-import TABA4_9.CampShare.Entity.Product;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.lang.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Getter @Setter
 public class PostProductDto implements Serializable {
@@ -18,7 +17,7 @@ public class PostProductDto implements Serializable {
     private String headcount;
     private String explanation;
     private String price;
-    private String imagePath;
+    private List<String> imagePath;
     private String imageUrl;
     private String brand;
     private String usingYear;

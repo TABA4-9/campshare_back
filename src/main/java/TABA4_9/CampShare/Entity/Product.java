@@ -1,6 +1,7 @@
 package TABA4_9.CampShare.Entity;
 
 import TABA4_9.CampShare.Dto.Product.PostProductDto;
+import TABA4_9.CampShare.Dto.Product.ProductDto;
 import lombok.Getter;
 import lombok.Setter;
 
