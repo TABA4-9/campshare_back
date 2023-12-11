@@ -138,7 +138,7 @@ public class ProductController {
         productService.save(product);
         log.debug("Tibero 저장 성공");
 
-        //rentuserid로 account 찾기
+        //postuserid로 account 찾기
         Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
         log.debug("matching dbAccount: {}", dbAccount);
 
@@ -158,7 +158,7 @@ public class ProductController {
     */
     @PostMapping("/product/update")
     public UpdateDto updateProduct(@ModelAttribute PostProductDto updatedProduct) {
-        
+
         UpdateDto updateDto = new UpdateDto();
 
         try {
@@ -168,7 +168,7 @@ public class ProductController {
             productService.save(updatingProduct);
             log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
             updateDto.setUpdateSuccess(true);
-            updateDto.setUpdateProduct(updatingProduct);
+            updateDto.setUpdateProduct(new ProductDto(updatingProduct));
         }catch (Exception e) {
             updateDto.setUpdateSuccess(false);
             updateDto.setUpdateProduct(null);
@@ -183,9 +183,21 @@ public class ProductController {
     @PostMapping("/product/delete")
     public DeleteDto deleteProduct(@RequestBody DeleteDto deleteDto) {
         System.out.println("delete productId = " + deleteDto.getProductId());
-
+        Product product = productService.findById(deleteDto.getProductId()).orElseThrow();
         try {
-            productService.delete(productService.findById(deleteDto.getProductId()).orElseThrow());
+            productService.delete(product);
+
+            //postuserid로 account 찾기
+            Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
+            log.debug("matching dbAccount: {}", dbAccount);
+
+            //account의 lend product 찾기
+            List<Product> productList = productService.findByPostUserId(product.getPostUserId()).orElseThrow();
+            List<ProductDto> productDtoList = new ArrayList<>();
+            productDtoList = imagePathSetting(productList, productDtoList);
+
+            deleteDto.setLendItem(productDtoList);
+            System.out.println("get delete LendItem: " + deleteDto.getLendItem());
             deleteDto.setDeleteSuccess(true);
         }
         catch (Exception e) {
