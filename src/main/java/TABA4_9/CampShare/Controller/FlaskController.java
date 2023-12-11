@@ -26,7 +26,6 @@ import java.util.Optional;
 @RestController
 public class FlaskController {
 
-
     private final AccountService accountService;
     private final ProductService productService;
     private final ViewLogService viewLogService;
@@ -70,10 +69,6 @@ public class FlaskController {
 
         //spring to flask
         List<Product> recommendProducts = sendToFlaskController(flaskProductDtoList,flaskLogDtoList,flaskTestDto);
-
-
-
-
         for (Product tempProduct : recommendProducts) {
             ProductDto productDto = new ProductDto(tempProduct);
             Optional<Account> account = accountService.findById(productDto.getPostUserId());

@@ -5,8 +5,10 @@ import TABA4_9.CampShare.Dto.KakaoOAuth.KakaoAccountDto;
 import TABA4_9.CampShare.Dto.KakaoOAuth.KakaoTokenDto;
 import TABA4_9.CampShare.Dto.KakaoOAuth.LoginResponseDto;
 import TABA4_9.CampShare.Dto.KakaoOAuth.TokenDto;
+import TABA4_9.CampShare.Dto.Product.ProductDto;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Authority;
+import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Repository.KakaoAccountRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -180,8 +185,15 @@ public class AuthService {
 
             loginResponseDto.setLoginSuccess(true);
             loginResponseDto.getAccount().setId(dbAccount.getId());
-            loginResponseDto.setLendItem(productService.findByPostUserId(dbAccount.getId()).orElseThrow());
-            loginResponseDto.setRentItem(productService.findByRentUserId(dbAccount.getId()).orElseThrow());
+            List<Product> lendProductList = productService.findByPostUserId(dbAccount.getId()).orElseThrow();
+            List<ProductDto> lendItemDtoList = new ArrayList<>();
+            lendItemDtoList = imagePathSetting(lendProductList, lendItemDtoList);
+
+            loginResponseDto.setLendItem(lendItemDtoList);
+            List<Product> rentProductList = productService.findByRentUserId(dbAccount.getId()).orElseThrow();
+            List<ProductDto> rentItemDtoList = new ArrayList<>();
+            rentItemDtoList = imagePathSetting(rentProductList, rentItemDtoList);
+            loginResponseDto.setRentItem(rentItemDtoList);
 
             log.debug("getPostedProducts : {}", loginResponseDto.getLendItem());
             log.debug("getRentedProducts : {}", loginResponseDto.getRentItem());
@@ -216,5 +228,21 @@ public class AuthService {
 
         return headers;
     }
+
+    List<ProductDto> imagePathSetting(List<Product> productList, List<ProductDto> productDtoList){
+        for (Product product : productList) {
+            ProductDto productDto = new ProductDto(product);
+            List<String> imagePathList = new ArrayList<>(3);
+            for (int j = 0; j < 3; j++) {
+                String imagePath = productDto.getImagePath().get(j);
+                if (imagePath != null) {
+                    imagePathList.add(imagePath);
+                }
+            }//endForJ
+            productDto.setImagePath(imagePathList);
+            productDtoList.add(productDto);
+        }//endForI
+        return productDtoList;
+    }//endFunction
 
 }//endClass

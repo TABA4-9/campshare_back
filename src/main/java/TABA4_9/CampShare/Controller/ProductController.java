@@ -4,9 +4,7 @@ import TABA4_9.CampShare.Dto.Product.*;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
-import TABA4_9.CampShare.Entity.ViewLog;
 import TABA4_9.CampShare.Service.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,7 +27,6 @@ public class ProductController {
 
     private final DanawaService danawaService;
     private final ProductService productService;
-    private final ViewLogService viewLogService;
     private final AccountService accountService;
     private final S3UploadService s3UploadService;
     /*
@@ -100,6 +97,67 @@ public class ProductController {
             return String.format("%.0f", (usingYear / 10) * avgPrice * 0.02); //감가상각 수식 적용
         }
     }//endNextPage
+    /*
+        상품 정보 수정
+    */
+    @PostMapping("/product/update")
+    public ResponseEntity<UpdateDto> updateProduct(@ModelAttribute PostProductDto updatedProduct) {
+        UpdateDto updateDto = new UpdateDto();
+        MultipartFile[] uploadFiles = updatedProduct.getImage();
+        List<String> imagePath = new ArrayList<>();
+        List<String> imageUrl = updatedProduct.getImageUrl();
+        Product product = new Product(updatedProduct);
+        product.setTimestamp(setTimeStamp());
+
+        try {
+            for (MultipartFile uploadFile : uploadFiles) {
+                // 이미지 파일만 업로드 가능
+                if (!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")) {
+                    // 이미지가 아닌경우 403 Forbidden 반환
+                    return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+                }
+                String url = s3UploadService.saveFile(uploadFile);
+                imagePath.add(url);
+                log.debug("Return Url = {}", url);
+            }//endFor
+            int i, j;
+            for(i=0; imageUrl.listIterator(i).hasNext(); i++){
+                switch (i){
+                    case 0: product.setImagePath1(imageUrl.get(i)); break;
+                    case 1: product.setImagePath2(imageUrl.get(i)); break;
+                    case 2: product.setImagePath3(imageUrl.get(i));
+                }
+            }//endFor
+
+            for(j=0; imagePath.listIterator(j).hasNext(); i++, j++){
+                switch (i){
+                    case 0: product.setImagePath1(imagePath.get(j)); break;
+                    case 1: product.setImagePath2(imagePath.get(j)); break;
+                    case 2: product.setImagePath3(imagePath.get(j));
+                }
+            }//endFor
+
+            log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
+            productService.save(product);
+            log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
+            updateDto.setUpdateSuccess(true);
+        }catch (Exception e) {
+            updateDto.setUpdateSuccess(false);
+        }
+        //postuserid로 account 찾기
+        Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
+        log.debug("matching dbAccount: {}", dbAccount);
+
+        //account의 lend product 찾기
+        List<Product> productList = productService.findByPostUserId(dbAccount.getId()).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+
+        updateDto.setLendItem(productDtoList);
+        log.debug("Updated rentItem: {}", updateDto.getLendItem());
+
+        return new ResponseEntity<>(updateDto, HttpStatus.OK);
+    }//endUpdate
 
     /*
         상품 업로드 - 2페이지
@@ -154,30 +212,6 @@ public class ProductController {
     }//endSubmit
 
     /*
-        상품 정보 수정
-    */
-    @PostMapping("/product/update")
-    public UpdateDto updateProduct(@ModelAttribute PostProductDto updatedProduct) {
-
-        UpdateDto updateDto = new UpdateDto();
-
-        try {
-            log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
-            Product updatingProduct = new Product(updatedProduct);
-            updatingProduct.setTimestamp(setTimeStamp());
-            productService.save(updatingProduct);
-            log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
-            updateDto.setUpdateSuccess(true);
-            updateDto.setUpdateProduct(new ProductDto(updatingProduct));
-        }catch (Exception e) {
-            updateDto.setUpdateSuccess(false);
-            updateDto.setUpdateProduct(null);
-        }
-
-        return updateDto;
-    }//endUpdate
-
-    /*
         상품 정보 삭제
     */
     @PostMapping("/product/delete")
@@ -207,25 +241,6 @@ public class ProductController {
         return deleteDto;
     }//endDelete
 
-    /*
-        개별 상품 페이지
-    */
-    //@PostMapping("/detail/{itemId}")
-    public List<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) throws JsonProcessingException {
-        List<Product> showProducts = new ArrayList<>();
-        Product product = productService.findById(itemId).orElseThrow();
-
-        /* 로그 기록 */
-        ViewLog viewLog = new ViewLog();
-        viewLog.setItemId(product.getId());
-        viewLog.setUserId(detailDto.getUserId());
-        viewLog.setTimeStamp(detailDto.getDetailPageLog());
-        viewLogService.save(viewLog);
-
-        /* 추천 상품 정보 반환 */
-        return showProducts;
-    }
-
     @GetMapping("/product/data/search")
     public List<ProductDto> searchProduct(@RequestParam String searchInput){
         List<Product> productList = productService.findByNameLike(searchInput).orElseThrow();
@@ -234,7 +249,6 @@ public class ProductController {
 
         return productDtoList;
     }
-
 
     /* functions */
     List<ProductDto> imagePathSetting(List<Product> productList, List<ProductDto> productDtoList){
