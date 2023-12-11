@@ -186,7 +186,7 @@ public class ProductController {
     /*
         개별 상품 페이지
     */
-    @PostMapping("/detail/{itemId}")
+    //@PostMapping("/detail/{itemId}")
     public List<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) throws JsonProcessingException {
         List<Product> showProducts = new ArrayList<>();
         Product product = productService.findById(itemId).orElseThrow();
