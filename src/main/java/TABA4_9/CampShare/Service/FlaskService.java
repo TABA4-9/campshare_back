@@ -1,8 +1,8 @@
 package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.Dto.Flask.FlaskProductDto;
-import TABA4_9.CampShare.Dto.FlaskTestDto;
-import TABA4_9.CampShare.Dto.RecommendItemDto;
+import TABA4_9.CampShare.Dto.Flask.FlaskTestDto;
+import TABA4_9.CampShare.Dto.Product.RecommendItemDto;
 import TABA4_9.CampShare.Entity.ViewLog;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

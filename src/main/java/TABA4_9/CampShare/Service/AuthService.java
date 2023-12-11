@@ -1,10 +1,10 @@
 package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.CEmailLoginFailedException;
-import TABA4_9.CampShare.Dto.KakaoAccountDto;
-import TABA4_9.CampShare.Dto.KakaoTokenDto;
-import TABA4_9.CampShare.Dto.LoginResponseDto;
-import TABA4_9.CampShare.Dto.TokenDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.KakaoAccountDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.KakaoTokenDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.LoginResponseDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.TokenDto;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Authority;
 import TABA4_9.CampShare.Repository.KakaoAccountRepository;

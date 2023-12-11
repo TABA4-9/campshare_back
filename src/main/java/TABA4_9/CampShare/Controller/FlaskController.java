@@ -1,9 +1,9 @@
 package TABA4_9.CampShare.Controller;
 
-import TABA4_9.CampShare.Dto.DetailDto;
+import TABA4_9.CampShare.Dto.Product.DetailDto;
 import TABA4_9.CampShare.Dto.Flask.FlaskProductDto;
-import TABA4_9.CampShare.Dto.FlaskTestDto;
-import TABA4_9.CampShare.Dto.RecommendItemDto;
+import TABA4_9.CampShare.Dto.Flask.FlaskTestDto;
+import TABA4_9.CampShare.Dto.Product.RecommendItemDto;
 import TABA4_9.CampShare.Entity.Product;
 import TABA4_9.CampShare.Entity.ViewLog;
 import TABA4_9.CampShare.Service.*;

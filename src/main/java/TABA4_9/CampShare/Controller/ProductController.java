@@ -1,6 +1,6 @@
 package TABA4_9.CampShare.Controller;
 
-import TABA4_9.CampShare.Dto.*;
+import TABA4_9.CampShare.Dto.Product.*;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
@@ -54,21 +54,32 @@ public class ProductController {
     public List<ProductDto> getAllProduct() {
         List<Product> productList = productService.findAll().orElseThrow();
         List<ProductDto> productDtoList = new ArrayList<>();
-        imagePathSetting(productList, productDtoList);
+        productDtoList = imagePathSetting(productList, productDtoList);
+
         return productDtoList;
     }
 
     @PostMapping("/product/matching")
     public MatchingDto matching(@RequestBody MatchingDto matchingDto) {
+        //product id로 상품 찾기
         Product product = productService.findById(matchingDto.getProductId()).orElseThrow();
         product.setIsRented(true);
         product.setRentUserId(matchingDto.getRentUserId());
 
+        //rentuserid로 account 찾기
         Account dbAccount = accountService.findById(matchingDto.getRentUserId()).orElseThrow();
         log.debug("matching dbAccount: {}", dbAccount);
+
+        //product update
         productService.save(product);
-        matchingDto.setRentItem(productService.findByRentUserId(dbAccount.getId()).orElseThrow());
+
+        //account의 rent product 찾기
+        List<Product> productList = productService.findByRentUserId(dbAccount.getId()).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+        matchingDto.setRentItem(productDtoList);
         log.debug("Updated rentItem: {}", matchingDto.getRentItem());
+
         return matchingDto;
     }//endMatching
 
@@ -115,9 +126,14 @@ public class ProductController {
             log.debug("Return Url = {}", url);
 
         }//endFor
-        if(imagePath.listIterator(0).hasNext()) product.setImagePath1(imagePath.get(0));
-        if(imagePath.listIterator(1).hasNext()) product.setImagePath2(imagePath.get(1));
-        if(imagePath.listIterator(2).hasNext()) product.setImagePath3(imagePath.get(2));
+
+        for(int i=0; imagePath.listIterator(i).hasNext(); i++){
+            switch (i){
+                case 0: product.setImagePath1(imagePath.get(i)); break;
+                case 1: product.setImagePath2(imagePath.get(i)); break;
+                case 2: product.setImagePath3(imagePath.get(i));
+            }
+        }//endFor
 
         log.debug("Tibero 저장 시도");
         productService.save(product);
@@ -141,7 +157,7 @@ public class ProductController {
             log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
             updateDto.setUpdateSuccess(true);
             updateDto.setUpdateProduct(updatingProduct);
-        } catch (Exception e) {
+        }catch (Exception e) {
             updateDto.setUpdateSuccess(false);
             updateDto.setUpdateProduct(null);
         }
@@ -187,8 +203,12 @@ public class ProductController {
     }
 
     @GetMapping("/product/data/search")
-    public List<Product> searchProduct(@RequestParam String searchInput){
-        return productService.findByNameLike(searchInput).orElseThrow();
+    public List<ProductDto> searchProduct(@RequestParam String searchInput){
+        List<Product> productList = productService.findByNameLike(searchInput).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+
+        return productDtoList;
     }
 
 

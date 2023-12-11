@@ -1,4 +1,4 @@
-package TABA4_9.CampShare.Dto;
+package TABA4_9.CampShare.Dto.Product;
 
 import lombok.Getter;
 import lombok.Setter;

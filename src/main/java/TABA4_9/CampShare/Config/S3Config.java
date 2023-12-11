@@ -1,4 +1,4 @@
-package TABA4_9.CampShare;
+package TABA4_9.CampShare.Config;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;

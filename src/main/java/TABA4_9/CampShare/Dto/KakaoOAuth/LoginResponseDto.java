@@ -1,4 +1,4 @@
-package TABA4_9.CampShare.Dto;
+package TABA4_9.CampShare.Dto.KakaoOAuth;
 
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Product;

@@ -1,4 +1,4 @@
-package TABA4_9.CampShare.Dto;
+package TABA4_9.CampShare.Dto.KakaoOAuth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

@@ -1,6 +1,5 @@
-package TABA4_9.CampShare.Dto;
+package TABA4_9.CampShare.Dto.Product;
 
-import TABA4_9.CampShare.Entity.Product;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,5 +10,5 @@ public class MatchingDto {
     Long productId;
     Long rentUserId;
     @Setter
-    List<Product> rentItem;
+    List<ProductDto> rentItem;
 }

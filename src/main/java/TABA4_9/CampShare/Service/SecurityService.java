@@ -1,8 +1,8 @@
 package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.CEmailLoginFailedException;
-import TABA4_9.CampShare.Dto.SignupRequestDto;
-import TABA4_9.CampShare.Dto.TokenDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.SignupRequestDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.TokenDto;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.RefreshToken;
 import TABA4_9.CampShare.JwtProvider;
