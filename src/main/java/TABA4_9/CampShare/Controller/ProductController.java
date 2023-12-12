@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
@@ -106,13 +108,25 @@ public class ProductController {
     @PostMapping("/post/nextPage")
     public String postProduct1(@RequestBody Product product, Exception e) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
-        double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
+        //
+        String startDateStr = product.getStartDate();
+        String endDateStr = product.getEndDate();
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
+        LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+
+        double avgPrice = avgPrice(danawaService.findByPeople(headCount)) * daysBetween;//WHERE=몇인용
+
+
+        //
         if (avgPrice == 0L) {
             return "추천 가격 정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
-            return String.format("%.0f", (usingYear / 10) * avgPrice * 0.02); //감가상각 수식 적용
+            return String.format("%.0f", (1- (usingYear / 10)) * avgPrice * 0.2); //감가상각 수식 적용
         }
     }//endNextPage
     /*
