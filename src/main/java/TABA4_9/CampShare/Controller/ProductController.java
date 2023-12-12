@@ -15,10 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -34,12 +31,23 @@ public class ProductController {
     */
     @GetMapping("/product/data/main")
     public List<ProductDto> getThreeProduct() {
-        List<Product> productList = new ArrayList<>(3);
+        List<Product> allProductList = productService.findAll().orElseThrow();
+        List<Product> threeProductList = new ArrayList<>(3);
         List<ProductDto> productDtoList = new ArrayList<>(3);
-        productList.add(productService.findById(1L).orElseThrow());
-        productList.add(productService.findById(2L).orElseThrow());
-        productList.add(productService.findById(3L).orElseThrow());
-        productDtoList = imagePathSetting(productList, productDtoList);
+        Set<Integer> uniqueRandomSet = new HashSet<>();
+
+        while (uniqueRandomSet.size() < 3) {
+            double randomDouble = Math.random();
+            int randomToInt = (int)(randomDouble * allProductList.size());
+            uniqueRandomSet.add(randomToInt);
+        }
+        Integer[] randomArray = uniqueRandomSet.toArray(new Integer[0]);
+
+        for(int i=0; i<3; i++){
+            threeProductList.add(allProductList.get(randomArray[i]));
+        }
+
+        productDtoList = imagePathSetting(threeProductList, productDtoList);
 
         return productDtoList;
     }
