@@ -37,6 +37,7 @@ public class ProductController {
         List<Product> allProductList = productService.findAll().orElseThrow();
         List<Product> threeProductList = new ArrayList<>(3);
         List<ProductDto> productDtoList = new ArrayList<>(3);
+
         Set<Integer> uniqueRandomSet = new HashSet<>();
 
         while (uniqueRandomSet.size() < 3) {
@@ -51,7 +52,10 @@ public class ProductController {
         }
 
         productDtoList = imagePathSetting(threeProductList, productDtoList);
-
+        for(ProductDto productDto : productDtoList){
+            productDto.setPostUserName(accountService.findById(productDto.getPostUserId()).orElseThrow().getName());
+            productDto.setPostUserEmail(accountService.findById(productDto.getPostUserId()).orElseThrow().getEmail());
+        }
         return productDtoList;
     }
 
@@ -63,7 +67,10 @@ public class ProductController {
         List<Product> productList = productService.findAll().orElseThrow();
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList = imagePathSetting(productList, productDtoList);
-
+        for(ProductDto productDto : productDtoList){
+            productDto.setPostUserName(accountService.findById(productDto.getPostUserId()).orElseThrow().getName());
+            productDto.setPostUserEmail(accountService.findById(productDto.getPostUserId()).orElseThrow().getEmail());
+        }
         return productDtoList;
     }
 
