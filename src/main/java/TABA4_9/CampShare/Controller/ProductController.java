@@ -117,13 +117,14 @@ public class ProductController {
         LocalDate endDate = LocalDate.parse(endDateStr, formatter);
 
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        log.info("대여 기간 : {}", daysBetween);
 
-        double avgPrice = avgPrice(danawaService.findByPeople(headCount)) * daysBetween;//WHERE=몇인용
+        double avgPrice = avgPrice(danawaService.findByPeople(headCount), product.getCategory()) * daysBetween;//WHERE=몇인용
 
 
         //
         if (avgPrice == 0L) {
-            return "추천 가격 정보가 없습니다";
+            return "추천 정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
             return String.format("%.0f", (1- (usingYear / 10)) * avgPrice * 0.2); //감가상각 수식 적용
@@ -306,9 +307,15 @@ public class ProductController {
         return productDtoList;
     }//endFunction
 
-    Long avgPrice(Optional<List<Danawa>> danawaList) {
+    Long avgPrice(Optional<List<Danawa>> danawaList, String category) {
         Long avg = 0L;
         Long count = 0L;
+        if (category.equals("텐트")) {
+            System.out.println("두 문자열이 같습니다.");
+        }
+        else{
+            return 0L;
+        }
         for (Danawa danawa : danawaList.orElseThrow()) {
             avg += danawa.getPrice();
             count++;
