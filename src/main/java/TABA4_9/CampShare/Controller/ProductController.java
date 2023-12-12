@@ -4,6 +4,7 @@ import TABA4_9.CampShare.Dto.Product.*;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
+import TABA4_9.CampShare.Entity.ViewLog;
 import TABA4_9.CampShare.Service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,10 @@ public class ProductController {
     private final ProductService productService;
     private final AccountService accountService;
     private final S3UploadService s3UploadService;
+    private final ViewLogService viewLogService;
+
     /*
-        인기 상품 3개 return 해주는 getThreeProduct()
+        랜덤 상품 3개 return 해주는 getThreeProduct()
     */
     @GetMapping("/product/data/main")
     public List<ProductDto> getThreeProduct() {
@@ -228,9 +231,14 @@ public class ProductController {
     public DeleteDto deleteProduct(@RequestBody DeleteDto deleteDto) {
         System.out.println("delete productId = " + deleteDto.getProductId());
         Product product = productService.findById(deleteDto.getProductId()).orElseThrow();
+        List<ViewLog> viewLogList = viewLogService.deleteAllByItemId(product.getId()).orElseThrow();
+        for(ViewLog viewLog : viewLogList){
+            System.out.println("deleted viewLogItemId: " + viewLog.getItemId());
+        }
+        System.out.println("try 진입 전");
         try {
             productService.delete(product);
-
+            System.out.println("product 삭제 후");
             //postuserid로 account 찾기
             Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
             log.debug("matching dbAccount: {}", dbAccount);
@@ -241,8 +249,8 @@ public class ProductController {
             productDtoList = imagePathSetting(productList, productDtoList);
 
             deleteDto.setLendItem(productDtoList);
-            System.out.println("get delete LendItem: " + deleteDto.getLendItem());
             deleteDto.setDeleteSuccess(true);
+
         }
         catch (Exception e) {
             deleteDto.setDeleteSuccess(false);
