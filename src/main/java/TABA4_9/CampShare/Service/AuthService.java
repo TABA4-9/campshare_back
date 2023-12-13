@@ -1,13 +1,15 @@
 package TABA4_9.CampShare.Service;
 
 import TABA4_9.CampShare.CEmailLoginFailedException;
-import TABA4_9.CampShare.Dto.KakaoAccountDto;
-import TABA4_9.CampShare.Dto.KakaoTokenDto;
-import TABA4_9.CampShare.Dto.LoginResponseDto;
-import TABA4_9.CampShare.Dto.TokenDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.KakaoAccountDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.KakaoTokenDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.LoginResponseDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.TokenDto;
+import TABA4_9.CampShare.Dto.Product.ProductDto;
 import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Authority;
-import TABA4_9.CampShare.Repository.AccountRepository;
+import TABA4_9.CampShare.Entity.Product;
+import TABA4_9.CampShare.Repository.KakaoAccountRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -21,12 +23,15 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
     private final ProductService productService;
-    private final AccountRepository accountRepository;
+    private final KakaoAccountRepository kakaoAccountRepository;
     private final SecurityService securityService;
 
     /* 환경변수 가져오기 */
@@ -137,14 +142,14 @@ public class AuthService {
             // kakaoAccountDto 에서 필요한 정보 꺼내서 Account 객체로 매핑
             assert kakaoAccountDto != null;
             String email = kakaoAccountDto.getKakaoAccount().getEmail();
-            String kakaoName = kakaoAccountDto.getKakaoAccount().getProfile().getNickname();
+            String name = kakaoAccountDto.getKakaoAccount().getProfile().getNickname();
             log.debug("email: {}", email);
-            log.debug("kakaoName: {}", kakaoName);
+            log.debug("name: {}", name);
 
             return Account.builder()
                     .loginType("KAKAO")
                     .email(email)
-                    .kakaoName(kakaoName)
+                    .name(name)
                     .authority(Authority.ROLE_USER)
                     .build();
         }
@@ -172,18 +177,26 @@ public class AuthService {
             TokenDto tokenDto = securityService.login(account.getEmail());
             log.debug("tokenDto: {}", tokenDto);
 
-            Account dbAccount = accountRepository.findByEmail(account.getEmail()).orElseThrow();
-            log.info("productService.findByPostUserId(account.getAccountId()).orElseThrow(): {}", productService.findByPostUserId(dbAccount.getAccountId()).orElseThrow());
-            log.debug("productService.findByRentUserId(account.getAccountId()).orElseThrow(): {}", productService.findByRentUserId(dbAccount.getAccountId()).orElseThrow());
+            Account dbAccount = kakaoAccountRepository.findByEmail(account.getEmail()).orElseThrow();
+            log.debug("productService.findByPostUserId(account.getAccountId()).orElseThrow(): {}", productService.findByPostUserId(dbAccount.getId()).orElseThrow());
+            log.debug("productService.findByRentUserId(account.getAccountId()).orElseThrow(): {}", productService.findByRentUserId(dbAccount.getId()).orElseThrow());
 
             HttpHeaders headers = setTokenHeaders(tokenDto);
 
             loginResponseDto.setLoginSuccess(true);
-            loginResponseDto.setPostedProducts(productService.findByPostUserId(dbAccount.getAccountId()).orElseThrow());
-            loginResponseDto.setRentedProducts(productService.findByRentUserId(dbAccount.getAccountId()).orElseThrow());
+            loginResponseDto.getAccount().setId(dbAccount.getId());
+            List<Product> lendProductList = productService.findByPostUserId(dbAccount.getId()).orElseThrow();
+            List<ProductDto> lendItemDtoList = new ArrayList<>();
+            lendItemDtoList = imagePathSetting(lendProductList, lendItemDtoList);
 
-            log.debug("getPostedProducts : {}", loginResponseDto.getPostedProducts());
-            log.debug("getRentedProducts : {}", loginResponseDto.getRentedProducts());
+            loginResponseDto.setLendItem(lendItemDtoList);
+            List<Product> rentProductList = productService.findByRentUserId(dbAccount.getId()).orElseThrow();
+            List<ProductDto> rentItemDtoList = new ArrayList<>();
+            rentItemDtoList = imagePathSetting(rentProductList, rentItemDtoList);
+            loginResponseDto.setRentItem(rentItemDtoList);
+
+            log.debug("getPostedProducts : {}", loginResponseDto.getLendItem());
+            log.debug("getRentedProducts : {}", loginResponseDto.getRentItem());
             log.debug("return할 값: {}", ResponseEntity.ok().headers(headers).body(loginResponseDto));
 
             return ResponseEntity.ok().headers(headers).body(loginResponseDto);
@@ -193,7 +206,7 @@ public class AuthService {
             //로그인 실패
             loginResponseDto.setLoginSuccess(false);
             log.debug("계정 정보 못 찾음");
-            accountRepository.save(account);
+            kakaoAccountRepository.save(account);
             log.debug("DB에 계정 저장");
             return ResponseEntity.ok(loginResponseDto);
         }
@@ -215,5 +228,21 @@ public class AuthService {
 
         return headers;
     }
+
+    List<ProductDto> imagePathSetting(List<Product> productList, List<ProductDto> productDtoList){
+        for (Product product : productList) {
+            ProductDto productDto = new ProductDto(product);
+            List<String> imagePathList = new ArrayList<>(3);
+            for (int j = 0; j < 3; j++) {
+                String imagePath = productDto.getImagePath().get(j);
+                if (imagePath != null) {
+                    imagePathList.add(imagePath);
+                }
+            }//endForJ
+            productDto.setImagePath(imagePathList);
+            productDtoList.add(productDto);
+        }//endForI
+        return productDtoList;
+    }//endFunction
 
 }//endClass

@@ -1,0 +1,47 @@
+#--- 해결 ---
+### /product/data/main
+GET http://localhost:8080/product/data/main
+
+### /product/data/category
+GET http://localhost:8080/product/data/category
+
+### /product/matching
+POST http://localhost:8080/product/matching
+Content-Type: application/json
+
+{
+    "productId": 1,
+    "rentUserId":33
+}
+
+### /post/nextPage
+POST http://localhost:8080/post/nextPage
+Content-Type: application/json
+
+{
+"headcount": "2인",
+"usingYear": "3년 이하"
+}
+
+### /post/submit
+POST http://localhost:8080/post/submit
+#postman에서 보내기
+
+### /product/delete
+POST http://localhost:8080/product/delete
+Content-Type: application/json
+
+{
+  "productId": 51
+}
+
+### /product/data/search
+GET http://localhost:8080/product/data/search?searchInput=6
+
+
+
+
+#--- 미해결 ---
+
+### /product/update
+POST http://localhost:8080/product/update

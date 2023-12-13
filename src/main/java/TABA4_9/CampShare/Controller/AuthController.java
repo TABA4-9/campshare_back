@@ -1,6 +1,6 @@
 package TABA4_9.CampShare.Controller;
 
-import TABA4_9.CampShare.Dto.LoginResponseDto;
+import TABA4_9.CampShare.Dto.KakaoOAuth.LoginResponseDto;
 import TABA4_9.CampShare.Service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

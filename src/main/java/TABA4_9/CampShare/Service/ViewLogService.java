@@ -6,6 +6,7 @@ import TABA4_9.CampShare.Repository.ViewLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,18 +14,22 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ViewLogService {
     private final ViewLogRepository viewLogRepository;
-    public ViewLog save(ViewLog viewLog){
-        return viewLogRepository.save(viewLog);
+    public void save(ViewLog viewLog){
+        viewLogRepository.save(viewLog);
     }
+
     public Optional<ViewLog> findByUserId(Long id){
         return viewLogRepository.findByUserId(id);
     }
-
+    public Optional<List<ViewLog>> findById(Long id){
+        return viewLogRepository.findAllByItemId(id);
+    }
     public Optional<List<ViewLog>> findAll(){
         return Optional.of(viewLogRepository.findAll());
     }
 
-    public void deleteById(ViewLog viewLog){
-        viewLogRepository.deleteById(viewLog.getUserId());
+    public Optional<List<ViewLog>> deleteAllByItemId(Long id) {
+        return viewLogRepository.deleteAllByItemId(id);
     }
+
 }

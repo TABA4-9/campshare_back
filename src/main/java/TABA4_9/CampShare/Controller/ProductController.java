@@ -1,30 +1,22 @@
 package TABA4_9.CampShare.Controller;
 
-import TABA4_9.CampShare.Dto.*;
+import TABA4_9.CampShare.Dto.Product.*;
+import TABA4_9.CampShare.Entity.Account;
 import TABA4_9.CampShare.Entity.Danawa;
 import TABA4_9.CampShare.Entity.Product;
-import TABA4_9.CampShare.Entity.ProductImage;
 import TABA4_9.CampShare.Entity.ViewLog;
 import TABA4_9.CampShare.Service.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-import static java.lang.String.valueOf;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,42 +25,77 @@ public class ProductController {
 
     private final DanawaService danawaService;
     private final ProductService productService;
-    private final ProductImageService productImageService;
+    private final AccountService accountService;
+    private final S3UploadService s3UploadService;
     private final ViewLogService viewLogService;
-    private final FlaskService flaskService;
 
     /*
-        인기 상품 3개 return 해주는 getThreeProduct()
+        랜덤 상품 3개 return 해주는 getThreeProduct()
     */
     @GetMapping("/product/data/main")
-    public List<Product> getThreeProduct() {
-        List<Product> product = new ArrayList<>(3);
-        product.add(productService.findById(2L).orElseThrow());
-        product.add(productService.findById(3L).orElseThrow());
-        product.add(productService.findById(4L).orElseThrow());
-        return product;
+    public List<ProductDto> getThreeProduct() {
+        List<Product> allProductList = productService.findAll().orElseThrow();
+        List<Product> threeProductList = new ArrayList<>(3);
+        List<ProductDto> productDtoList = new ArrayList<>(3);
+
+        Set<Integer> uniqueRandomSet = new HashSet<>();
+
+        while (uniqueRandomSet.size() < 3) {
+            double randomDouble = Math.random();
+            int randomToInt = (int)(randomDouble * allProductList.size());
+            uniqueRandomSet.add(randomToInt);
+        }
+        Integer[] randomArray = uniqueRandomSet.toArray(new Integer[0]);
+
+        for(int i=0; i<3; i++){
+            threeProductList.add(allProductList.get(randomArray[i]));
+        }
+
+        productDtoList = imagePathSetting(threeProductList, productDtoList);
+        for(ProductDto productDto : productDtoList){
+            productDto.setPostUserName(accountService.findById(productDto.getPostUserId()).orElseThrow().getName());
+            productDto.setPostUserEmail(accountService.findById(productDto.getPostUserId()).orElseThrow().getEmail());
+        }
+        return productDtoList;
     }
 
     /*
         모든 상품 정보를 return 해주는 getAllProduct()
     */
     @GetMapping("/product/data/category")
-    public List<Product> getAllProduct() {
-        return productService.findAll().orElseThrow();
+    public List<ProductDto> getAllProduct() {
+        List<Product> productList = productService.findAll().orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+        for(ProductDto productDto : productDtoList){
+            productDto.setPostUserName(accountService.findById(productDto.getPostUserId()).orElseThrow().getName());
+            productDto.setPostUserEmail(accountService.findById(productDto.getPostUserId()).orElseThrow().getEmail());
+        }
+        return productDtoList;
     }
 
     @PostMapping("/product/matching")
-    public void matching(MatchingDto matchingDto){
+    public MatchingDto matching(@RequestBody MatchingDto matchingDto) {
+        //product id로 상품 찾기
         Product product = productService.findById(matchingDto.getProductId()).orElseThrow();
         product.setIsRented(true);
         product.setRentUserId(matchingDto.getRentUserId());
-        try{
-            productService.save(product);
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
 
+        //rentuserid로 account 찾기
+        Account dbAccount = accountService.findById(matchingDto.getRentUserId()).orElseThrow();
+        log.debug("matching dbAccount: {}", dbAccount);
+
+        //product update
+        productService.save(product);
+
+        //account의 rent product 찾기
+        List<Product> productList = productService.findByRentUserId(dbAccount.getId()).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+        matchingDto.setRentItem(productDtoList);
+        log.debug("Updated rentItem: {}", matchingDto.getRentItem());
+
+        return matchingDto;
     }//endMatching
 
 
@@ -77,38 +104,93 @@ public class ProductController {
     */
     @ExceptionHandler
     @PostMapping("/post/nextPage")
-    public String postProduct1(@RequestBody Product product ,Exception e) {
+    public String postProduct1(@RequestBody Product product, Exception e) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
-//        System.out.println("headCount = " + headCount);
         double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
 
         if (avgPrice == 0L) {
             return "추천 가격 정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
-            return String.format("%.2f", (usingYear / 10) * avgPrice * 0.05); //감가상각 수식 적용
+            return String.format("%.0f", (usingYear / 10) * avgPrice * 0.02); //감가상각 수식 적용
         }
     }//endNextPage
+    /*
+        상품 정보 수정
+    */
+    @PostMapping("/product/update")
+    public ResponseEntity<UpdateDto> updateProduct(@ModelAttribute PostProductDto updatedProduct) {
+        UpdateDto updateDto = new UpdateDto();
+        MultipartFile[] uploadFiles = updatedProduct.getImage();
+        List<String> imagePath = new ArrayList<>();
+        List<String> imageUrl = updatedProduct.getImageUrl();
+        Product product = new Product(updatedProduct);
+        product.setTimestamp(setTimeStamp());
 
-    @Value("${image.upload.path}") // application.properties의 변수
-    private String uploadPath;
+        try {
+            if(uploadFiles != null){
+                for (MultipartFile uploadFile : uploadFiles) {
+                    // 이미지 파일만 업로드 가능
+                    if (!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")) {
+                        // 이미지가 아닌경우 403 Forbidden 반환
+                        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+                    }
+                    String url = s3UploadService.saveFile(uploadFile);
+                    imagePath.add(url);
+                    log.debug("Return Url = {}", url);
+                }//endFor
+            }
+            int i, j;
+            for(i=0; imageUrl.listIterator(i).hasNext(); i++){
+                switch (i){
+                    case 0: product.setImagePath1(imageUrl.get(i)); break;
+                    case 1: product.setImagePath2(imageUrl.get(i)); break;
+                    case 2: product.setImagePath3(imageUrl.get(i));
+                }
+            }//endFor
+
+            for(j=0; imagePath.listIterator(j).hasNext(); i++, j++){
+                switch (i){
+                    case 0: product.setImagePath1(imagePath.get(j)); break;
+                    case 1: product.setImagePath2(imagePath.get(j)); break;
+                    case 2: product.setImagePath3(imagePath.get(j));
+                }
+            }//endFor
+
+            log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
+            productService.save(product);
+            log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
+            updateDto.setUpdateSuccess(true);
+        }catch (Exception e) {
+            updateDto.setUpdateSuccess(false);
+        }
+        //postuserid로 account 찾기
+        Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
+        log.debug("matching dbAccount: {}", dbAccount);
+
+        //account의 lend product 찾기
+        List<Product> productList = productService.findByPostUserId(dbAccount.getId()).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+
+        updateDto.setLendItem(productDtoList);
+        log.debug("Updated rentItem: {}", updateDto.getLendItem());
+
+        return new ResponseEntity<>(updateDto, HttpStatus.OK);
+    }//endUpdate
 
     /*
         상품 업로드 - 2페이지
     */
     @PostMapping("/post/submit")
-    public ResponseEntity<Product> postProduct2(@ModelAttribute PostProductDto postProductDto) {
+    public ResponseEntity<UploadResultDto> postProduct2(@ModelAttribute PostProductDto postProductDto) throws IOException {
         MultipartFile[] uploadFiles = postProductDto.getImage();
-
+        List<String> imagePath = new ArrayList<>();
+        UploadResultDto uploadResultDto = new UploadResultDto();
         Product product = new Product(postProductDto);
         product.setTimestamp(setTimeStamp());
-        product.setIsRented(false);
-        //todo 게시자 id 등록하기
-        //product.setPostUserId();
-        ProductImage productImage = new ProductImage();
-        List<UploadResultDto> resultDtoList = new ArrayList<>();
-        log.debug("Upload Files={}", (Object) uploadFiles);
 
+        log.debug("Upload Files={}", (Object) uploadFiles);
         for (MultipartFile uploadFile : uploadFiles) {
             // 이미지 파일만 업로드 가능
 
@@ -117,126 +199,98 @@ public class ProductController {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            // 실제 파일 이름 IE나 Edge는 전체 경로가 들어오므로
-            String originalName = uploadFile.getOriginalFilename();
-            log.debug("Original Name={}", originalName);
+            String url = s3UploadService.saveFile(uploadFile);
+            imagePath.add(url);
+            log.debug("Return Url = {}", url);
+        }//endFor
 
-            assert originalName != null;
-            String fileName = originalName.substring(originalName.lastIndexOf("\\") + 1);
-            log.debug("File Name={}", fileName);
-
-            // 날짜 폴더 생성
-            String folderPath = makeFolder();
-
-            //UUID
-            String uuid = UUID.randomUUID().toString();
-
-            //저장할 파일 이름
-            String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "~" + fileName;
-            log.debug("Save Name={}", saveName);
-
-            Path savePath = Paths.get(saveName);
-            log.debug("Save Path={}", savePath);
-
-            productImage.setUuid(uuid);
-            productImage.setImagePath(valueOf(savePath));
-            product.setImagePath(valueOf(savePath));
-
-            log.debug("ProductImage : {}", productImage);
-
-            try {
-                log.debug("Tibero 저장 시도");
-                productService.save(product);
-                productImage.setProduct(product);
-                productImageService.save(productImage);
-                log.debug("Tibero 저장 성공");
-                uploadFile.transferTo(savePath);// 로컬에 이미지 저장
-                resultDtoList.add(new UploadResultDto(fileName, uuid, folderPath));
-
-                log.debug("ResultDtoList (in try):{}", resultDtoList);
-
-            } catch (IOException e) {
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        for(int i=0; imagePath.listIterator(i).hasNext(); i++){
+            switch (i){
+                case 0: product.setImagePath1(imagePath.get(i)); break;
+                case 1: product.setImagePath2(imagePath.get(i)); break;
+                case 2: product.setImagePath3(imagePath.get(i));
             }
         }//endFor
-        return new ResponseEntity<>(HttpStatus.OK);
+
+        log.debug("Tibero 저장 시도");
+        productService.save(product);
+        log.debug("Tibero 저장 성공");
+
+        //postuserid로 account 찾기
+        Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
+        log.debug("matching dbAccount: {}", dbAccount);
+
+        //account의 lend product 찾기
+        List<Product> productList = productService.findByPostUserId(dbAccount.getId()).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
+
+        uploadResultDto.setLendItem(productDtoList);
+        log.debug("Updated rentItem: {}", uploadResultDto.getLendItem());
+
+        return new ResponseEntity<>(uploadResultDto, HttpStatus.OK);
     }//endSubmit
-
-    /*
-        상품 정보 수정
-    */
-    @PutMapping("/product/update")
-    public UpdateDto updateProduct(@RequestBody Product updatedProduct) {
-
-        UpdateDto updateDto = new UpdateDto();
-
-        try {
-            log.debug("수정 전: {}", productService.findById(updatedProduct.getId()));
-            productService.save(updatedProduct);
-            log.debug("수정 후: {}", productService.findById(updatedProduct.getId()));
-            updateDto.setUpdateSuccess(true);
-            updateDto.setUpdateProduct(updatedProduct);
-        } catch (Exception e) {
-            updateDto.setUpdateSuccess(false);
-            updateDto.setUpdateProduct(null);
-        }
-
-        return updateDto;
-    }//endUpdate
 
     /*
         상품 정보 삭제
     */
-    @DeleteMapping("/product/delete")
-    public DeleteDto deleteProduct(@RequestParam Long productId) {
-
-        DeleteDto deleteDto = new DeleteDto();
-
+    @PostMapping("/product/delete")
+    public DeleteDto deleteProduct(@RequestBody DeleteDto deleteDto) {
+        System.out.println("delete productId = " + deleteDto.getProductId());
+        Product product = productService.findById(deleteDto.getProductId()).orElseThrow();
+        List<ViewLog> viewLogList = viewLogService.deleteAllByItemId(product.getId()).orElseThrow();
+        for(ViewLog viewLog : viewLogList){
+            System.out.println("deleted viewLogItemId: " + viewLog.getItemId());
+        }
+        System.out.println("try 진입 전");
         try {
-            productService.delete(productService.findById(productId).orElseThrow());
+            productService.delete(product);
+            System.out.println("product 삭제 후");
+            //postuserid로 account 찾기
+            Account dbAccount = accountService.findById(product.getPostUserId()).orElseThrow();
+            log.debug("matching dbAccount: {}", dbAccount);
+
+            //account의 lend product 찾기
+            List<Product> productList = productService.findByPostUserId(product.getPostUserId()).orElseThrow();
+            List<ProductDto> productDtoList = new ArrayList<>();
+            productDtoList = imagePathSetting(productList, productDtoList);
+
+            deleteDto.setLendItem(productDtoList);
             deleteDto.setDeleteSuccess(true);
-            deleteDto.setProductId(productId);
+
         }
         catch (Exception e) {
             deleteDto.setDeleteSuccess(false);
-            deleteDto.setProductId(productId);
         }
 
         return deleteDto;
     }//endDelete
 
-    /*
-        개별 상품 페이지
-    */
-    @PostMapping("/detail/{itemId}")
-    public List<Product> detailProduct(@PathVariable("itemId") Long itemId, @RequestBody DetailDto detailDto) throws JsonProcessingException {
-        List<Product> showProducts = new ArrayList<>();
-        Product product = productService.findById(itemId).orElseThrow();
+    @GetMapping("/product/data/search")
+    public List<ProductDto> searchProduct(@RequestParam String searchInput){
+        List<Product> productList = productService.findByNameLike(searchInput).orElseThrow();
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList = imagePathSetting(productList, productDtoList);
 
-        /* 로그 기록 */
-        ViewLog viewLog = new ViewLog();
-        viewLog.setItemId(product.getId());
-        viewLog.setUserId(detailDto.getUserId());
-        viewLog.setTimeStamp(detailDto.getTimeStamp());
-        viewLogService.save(viewLog);
-
-        /* Flask 통신 */
-        FlaskTestDto flaskTestDto = new FlaskTestDto();
-        flaskTestDto.setId(product.getId());
-        flaskTestDto.setName(product.getName());
-
-        List<Product> recommendProducts = sendToFlask(flaskTestDto);
-
-        showProducts.add(recommendProducts.get(0));
-        showProducts.add(recommendProducts.get(1));
-        showProducts.add(recommendProducts.get(2));
-
-        /* 추천 상품 정보 반환 */
-        return showProducts;
+        return productDtoList;
     }
 
-
     /* functions */
+    List<ProductDto> imagePathSetting(List<Product> productList, List<ProductDto> productDtoList){
+        for (Product product : productList) {
+            ProductDto productDto = new ProductDto(product);
+            List<String> imagePathList = new ArrayList<>(3);
+            for (int j = 0; j < 3; j++) {
+                String imagePath = productDto.getImagePath().get(j);
+                if (imagePath != null) {
+                    imagePathList.add(imagePath);
+                }
+            }//endForJ
+            productDto.setImagePath(imagePathList);
+            productDtoList.add(productDto);
+        }//endForI
+        return productDtoList;
+    }//endFunction
 
     Long avgPrice(Optional<List<Danawa>> danawaList) {
         Long avg = 0L;
@@ -254,38 +308,6 @@ public class ProductController {
 
     String setTimeStamp() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    }
-
-    String makeFolder() {
-
-        String str = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        log.debug("Data str : {}", str);
-
-        String folderPath = str.replace("/", File.separator);
-        log.debug("Folder Path : {}", folderPath);
-
-        // make folder
-        File uploadPatheFolder = new File(uploadPath, folderPath);
-
-        if (!uploadPatheFolder.exists()) {
-            uploadPatheFolder.mkdirs();
-        }
-        return folderPath;
-    }
-
-    public List<Product> sendToFlask(FlaskTestDto flaskTestDto) throws JsonProcessingException {
-        RecommendItemDto recommendItemDto = flaskService.sendToFlask(flaskTestDto);
-
-        Long item1 = recommendItemDto.getRecommendItemId1();
-        Long item2 = recommendItemDto.getRecommendItemId2();
-        Long item3 = recommendItemDto.getRecommendItemId3();
-
-        List<Product> products = new ArrayList<>();
-
-        products.add(productService.findById(item1).orElseThrow());
-        products.add(productService.findById(item2).orElseThrow());
-        products.add(productService.findById(item3).orElseThrow());
-        return products;
     }
 
 }//endClass

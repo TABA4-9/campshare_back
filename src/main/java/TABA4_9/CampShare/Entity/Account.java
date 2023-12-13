@@ -20,14 +20,14 @@ import javax.persistence.*;
 public class Account extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
-    private Long accountId;
+    private Long id;
 
     private String loginType;
 
     @Enumerated(EnumType.STRING)
     private Authority authority;
 
-    private String kakaoName; //카카오닉네임
+    private String name; //카카오닉네임
 
     private String nickname; //사용자별명
 
