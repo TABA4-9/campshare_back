@@ -33,7 +33,7 @@ public class AuthService {
     private final ProductService productService;
     private final KakaoAccountRepository kakaoAccountRepository;
     private final SecurityService securityService;
-
+    private final AccountService accountService;
     /* 환경변수 가져오기 */
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     String KAKAO_CLIENT_ID;
@@ -189,10 +189,20 @@ public class AuthService {
             List<ProductDto> lendItemDtoList = new ArrayList<>();
             lendItemDtoList = imagePathSetting(lendProductList, lendItemDtoList);
 
+            for(ProductDto productDto : lendItemDtoList){
+                productDto.setPostUserName(accountService.findById(productDto.getPostUserId()).orElseThrow().getName());
+                productDto.setPostUserEmail(accountService.findById(productDto.getPostUserId()).orElseThrow().getEmail());
+            }
+
             loginResponseDto.setLendItem(lendItemDtoList);
             List<Product> rentProductList = productService.findByRentUserId(dbAccount.getId()).orElseThrow();
             List<ProductDto> rentItemDtoList = new ArrayList<>();
             rentItemDtoList = imagePathSetting(rentProductList, rentItemDtoList);
+            for(ProductDto productDto : rentItemDtoList){
+                productDto.setPostUserName(accountService.findById(productDto.getPostUserId()).orElseThrow().getName());
+                productDto.setPostUserEmail(accountService.findById(productDto.getPostUserId()).orElseThrow().getEmail());
+            }
+
             loginResponseDto.setRentItem(rentItemDtoList);
 
             log.debug("getPostedProducts : {}", loginResponseDto.getLendItem());

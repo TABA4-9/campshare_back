@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
@@ -106,13 +108,17 @@ public class ProductController {
     @PostMapping("/post/nextPage")
     public String postProduct1(@RequestBody Product product, Exception e) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
-        double avgPrice = avgPrice(danawaService.findByPeople(headCount)); //WHERE=몇인용
+        //
 
+
+//        double avgPrice = avgPrice(danawaService.findByPeople(headCount), product.getCategory()) * daysBetween;//WHERE=몇인용
+        double avgPrice = avgPrice(danawaService.findByPeople(headCount), product.getCategory());
+        //
         if (avgPrice == 0L) {
-            return "추천 가격 정보가 없습니다";
+            return "정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
-            return String.format("%.0f", (usingYear / 10) * avgPrice * 0.02); //감가상각 수식 적용
+            return String.format("%.0f", (1- (usingYear / 10)) * avgPrice * 0.16); //감가상각 수식 적용
         }
     }//endNextPage
     /*
@@ -292,9 +298,15 @@ public class ProductController {
         return productDtoList;
     }//endFunction
 
-    Long avgPrice(Optional<List<Danawa>> danawaList) {
+    Long avgPrice(Optional<List<Danawa>> danawaList, String category) {
         Long avg = 0L;
         Long count = 0L;
+        if (category.equals("텐트")) {
+            System.out.println("두 문자열이 같습니다.");
+        }
+        else{
+            return 0L;
+        }
         for (Danawa danawa : danawaList.orElseThrow()) {
             avg += danawa.getPrice();
             count++;
