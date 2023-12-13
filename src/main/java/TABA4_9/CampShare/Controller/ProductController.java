@@ -109,15 +109,7 @@ public class ProductController {
     public String postProduct1(@RequestBody Product product, Exception e) {
         Long headCount = Long.parseLong(product.getHeadcount().substring(0, 1));
         //
-//        String startDateStr = product.getStartDate();
-//        String endDateStr = product.getEndDate();
 
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
-//        LocalDate startDate = LocalDate.parse(startDateStr, formatter);
-//        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
-
-//        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
-//        log.info("대여 기간 : {}", daysBetween);
 
 //        double avgPrice = avgPrice(danawaService.findByPeople(headCount), product.getCategory()) * daysBetween;//WHERE=몇인용
         double avgPrice = avgPrice(danawaService.findByPeople(headCount), product.getCategory());
@@ -126,7 +118,7 @@ public class ProductController {
             return "정보가 없습니다";
         } else {
             double usingYear = (Long.parseLong(product.getUsingYear().substring(0, 1)));
-            return String.format("%.0f", (1- (usingYear / 10)) * avgPrice * 0.2); //감가상각 수식 적용
+            return String.format("%.0f", (1- (usingYear / 10)) * avgPrice * 0.16); //감가상각 수식 적용
         }
     }//endNextPage
     /*
